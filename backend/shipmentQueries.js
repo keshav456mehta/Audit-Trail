@@ -1,11 +1,14 @@
-
 const express = require("express");
 
 const router = express.Router();
 
-router.get("/", (req, res) => {
-    res.json({
-        message: "Shipment Queries Router Working"
+router.get("/:id", (req, res) => {
+    const id = req.params.id;
+
+    res.status(200).json({
+        success: true,
+        shipmentId: id,
+        message: "Dummy shipment route working"
     });
 });
 
