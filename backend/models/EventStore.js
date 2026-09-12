@@ -28,12 +28,12 @@ const eventSchema = new mongoose.Schema({
 
   timestamp: {
     type: Date,
-    required: true,
+    default: Date.now,
   },
 
   version: {
     type: Number,
-    required: true,
+    default: 1,
   },
 });
 
