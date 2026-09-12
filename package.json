@@ -1,10 +1,10 @@
 {
-  "name": "audit-trail-workspace",
+  "name": "audit-trail",
   "private": true,
   "scripts": {
-    "dev": "cd Audit-Trail && npm run dev",
-    "build": "cd Audit-Trail && npm run build",
-    "lint": "cd Audit-Trail && npm run lint",
-    "preview": "cd Audit-Trail && npm run preview"
+    "dev": "cd frontend && npm run dev",
+    "build": "cd frontend && npm run build",
+    "lint": "cd frontend && npm run lint",
+    "preview": "cd frontend && npm run preview"
   }
 }
