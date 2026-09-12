@@ -1,14 +1,38 @@
 const express = require('express');
+const EventStore = require('../models/EventStore');
 
 const shipmentCommandsRouter = express.Router();
 
-shipmentCommandsRouter.post('/move', (req, res) => {
-  console.log('Shipment move event received:', req.body);
+shipmentCommandsRouter.post('/move', async (req, res) => {
+  const { aggregateId, shipmentId } = req.body;
+  const eventAggregateId = aggregateId || shipmentId;
 
-  res.status(200).json({
-    success: true,
-    message: 'Event received',
-  });
+  if (!eventAggregateId) {
+    return res.status(400).json({
+      success: false,
+      message: 'aggregateId or shipmentId is required',
+    });
+  }
+
+  try {
+    const event = await EventStore.create({
+      aggregateId: eventAggregateId,
+      eventType: 'ShipmentMoved',
+      payload: req.body,
+    });
+
+    return res.status(201).json({
+      success: true,
+      message: 'Shipment move event recorded',
+      event,
+    });
+  } catch (error) {
+    console.error('Failed to record shipment move event:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to record shipment move event',
+    });
+  }
 });
 
 module.exports = shipmentCommandsRouter;
