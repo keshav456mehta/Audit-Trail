@@ -1,15 +1,20 @@
 const express = require("express");
-
 const router = express.Router();
 
-router.get("/:id", (req, res) => {
-    const id = req.params.id;
+const EventStore = require("./models/EventStore");
 
-    res.status(200).json({
-        success: true,
-        shipmentId: id,
-        message: "Dummy shipment route working"
-    });
+router.get("/:id", async (req, res) => {
+    try {
+        const events = await EventStore.find({
+            aggregateId: req.params.id
+        }).sort({ timestamp: 1 });
+
+        res.json(events);
+    } catch (err) {
+        res.status(500).json({
+            message: "Error fetching events"
+        });
+    }
 });
 
 module.exports = router;
