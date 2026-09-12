@@ -4,26 +4,27 @@ const EventStore = require('../models/EventStore');
 const shipmentCommandsRouter = express.Router();
 
 shipmentCommandsRouter.post('/move', async (req, res) => {
-  const { aggregateId, shipmentId } = req.body;
-  const eventAggregateId = aggregateId || shipmentId;
+  const { aggregateId, eventType, payload } = req.body;
 
-  if (!eventAggregateId) {
+  if (!aggregateId || !eventType || payload === undefined) {
     return res.status(400).json({
       success: false,
-      message: 'aggregateId or shipmentId is required',
+      message: 'aggregateId, eventType, and payload are required',
     });
   }
 
   try {
     const event = await EventStore.create({
-      aggregateId: eventAggregateId,
-      eventType: 'ShipmentMoved',
-      payload: req.body,
+      aggregateId,
+      eventType,
+      payload,
+      timestamp: new Date(),
+      version: 1,
     });
 
     return res.status(201).json({
       success: true,
-      message: 'Shipment move event recorded',
+      message: 'Shipment event recorded',
       event,
     });
   } catch (error) {

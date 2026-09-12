@@ -6,12 +6,16 @@ const EventStore = require('../models/EventStore');
 
 test('POST /shipment/move records a shipment move event', async (testContext) => {
   const originalCreate = EventStore.create;
-  const payload = { aggregateId: '123', destination: 'Mumbai' };
+  const requestBody = {
+    aggregateId: '123',
+    eventType: 'CREATED',
+    payload: { origin: 'Chennai' },
+  };
   const persistedEvent = {
     _id: 'event-1',
     aggregateId: '123',
-    eventType: 'ShipmentMoved',
-    payload,
+    eventType: 'CREATED',
+    payload: requestBody.payload,
   };
   let createInput;
 
@@ -32,19 +36,21 @@ test('POST /shipment/move records a shipment move event', async (testContext) =>
   const response = await fetch(`http://127.0.0.1:${port}/shipment/move`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload),
+    body: JSON.stringify(requestBody),
   });
 
   assert.equal(response.status, 201);
   assert.deepEqual(await response.json(), {
     success: true,
-    message: 'Shipment move event recorded',
+    message: 'Shipment event recorded',
     event: persistedEvent,
   });
   assert.deepEqual(createInput, {
     aggregateId: '123',
-    eventType: 'ShipmentMoved',
-    payload,
+    eventType: 'CREATED',
+    payload: requestBody.payload,
+    timestamp: createInput.timestamp,
+    version: 1,
   });
 });
 
@@ -58,12 +64,12 @@ test('POST /shipment/move requires an aggregate ID', async (testContext) => {
   const response = await fetch(`http://127.0.0.1:${port}/shipment/move`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ destination: 'Mumbai' }),
+    body: JSON.stringify({ aggregateId: '123' }),
   });
 
   assert.equal(response.status, 400);
   assert.deepEqual(await response.json(), {
     success: false,
-    message: 'aggregateId or shipmentId is required',
+    message: 'aggregateId, eventType, and payload are required',
   });
 });
