@@ -1,8 +1,7 @@
 const express = require("express");
 const router = express.Router();
 
-const EventStore = require("./models/EventStore");
-
+const EventStore = require("../models/EventStore");
 router.get("/:id", async (req, res) => {
     try {
         const events = await EventStore.find({
