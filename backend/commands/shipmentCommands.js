@@ -4,7 +4,7 @@ const EventStore = require('../models/EventStore');
 const shipmentCommandsRouter = express.Router();
 
 shipmentCommandsRouter.post('/move', async (req, res) => {
-  const { aggregateId, eventType, payload } = req.body;
+  const { aggregateId, eventType, payload } = req.body || {};
 
   if (!aggregateId || !eventType) {
     return res.status(400).json({

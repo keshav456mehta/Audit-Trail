@@ -87,3 +87,54 @@ for (const [name, body] of [
     assert.equal(createCalled, false);
   });
 }
+
+for (const [name, body] of [
+  ['an empty payload object', { aggregateId: '123', eventType: 'CREATED', payload: {} }],
+  ['a numeric aggregate ID', { aggregateId: 123, eventType: 'CREATED', payload: {} }],
+  ['a string payload', { aggregateId: '123', eventType: 'CREATED', payload: 'note' }],
+  ['an unexpected event type', { aggregateId: '123', eventType: 'BANANA', payload: {} }],
+]) {
+  test(`POST /shipment/move accepts ${name} without crashing`, async (testContext) => {
+    const originalCreate = EventStore.create;
+    let createInput;
+    EventStore.create = async (input) => {
+      createInput = input;
+      return input;
+    };
+
+    const server = http.createServer(app);
+    await new Promise((resolve) => server.listen(0, resolve));
+    testContext.after(() => {
+      EventStore.create = originalCreate;
+      server.close();
+    });
+
+    const { port } = server.address();
+    const response = await fetch(`http://127.0.0.1:${port}/shipment/move`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+
+    assert.equal(response.status, 201);
+    assert.deepEqual(createInput.aggregateId, body.aggregateId);
+    assert.deepEqual(createInput.eventType, body.eventType);
+    assert.deepEqual(createInput.payload, body.payload);
+  });
+}
+
+test('POST /shipment/move rejects an empty request body without crashing', async (testContext) => {
+  const server = http.createServer(app);
+  await new Promise((resolve) => server.listen(0, resolve));
+  testContext.after(() => server.close());
+
+  const { port } = server.address();
+  const response = await fetch(`http://127.0.0.1:${port}/shipment/move`, {
+    method: 'POST',
+  });
+
+  assert.equal(response.status, 400);
+  assert.deepEqual(await response.json(), {
+    error: 'aggregateId and eventType are required',
+  });
+});
