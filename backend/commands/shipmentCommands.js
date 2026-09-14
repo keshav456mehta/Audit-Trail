@@ -6,10 +6,15 @@ const shipmentCommandsRouter = express.Router();
 shipmentCommandsRouter.post('/move', async (req, res) => {
   const { aggregateId, eventType, payload } = req.body;
 
-  if (!aggregateId || !eventType || payload === undefined) {
+  if (!aggregateId || !eventType) {
     return res.status(400).json({
-      success: false,
-      message: 'aggregateId, eventType, and payload are required',
+      error: 'aggregateId and eventType are required',
+    });
+  }
+
+  if (payload === undefined) {
+    return res.status(400).json({
+      error: 'payload is required',
     });
   }
 

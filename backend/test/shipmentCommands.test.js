@@ -54,22 +54,36 @@ test('POST /shipment/move records a shipment move event', async (testContext) =>
   });
 });
 
-test('POST /shipment/move requires an aggregate ID', async (testContext) => {
-  const server = http.createServer(app);
+for (const [name, body] of [
+  ['aggregateId', { eventType: 'CREATED', payload: {} }],
+  ['eventType', { aggregateId: '123', payload: {} }],
+  ['aggregateId and eventType', { payload: {} }],
+]) {
+  test(`POST /shipment/move rejects a request missing ${name}`, async (testContext) => {
+    const originalCreate = EventStore.create;
+    let createCalled = false;
+    EventStore.create = async () => {
+      createCalled = true;
+    };
 
-  await new Promise((resolve) => server.listen(0, resolve));
-  testContext.after(() => server.close());
+    const server = http.createServer(app);
+    await new Promise((resolve) => server.listen(0, resolve));
+    testContext.after(() => {
+      EventStore.create = originalCreate;
+      server.close();
+    });
 
-  const { port } = server.address();
-  const response = await fetch(`http://127.0.0.1:${port}/shipment/move`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ aggregateId: '123' }),
+    const { port } = server.address();
+    const response = await fetch(`http://127.0.0.1:${port}/shipment/move`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+
+    assert.equal(response.status, 400);
+    assert.deepEqual(await response.json(), {
+      error: 'aggregateId and eventType are required',
+    });
+    assert.equal(createCalled, false);
   });
-
-  assert.equal(response.status, 400);
-  assert.deepEqual(await response.json(), {
-    success: false,
-    message: 'aggregateId, eventType, and payload are required',
-  });
-});
+}
