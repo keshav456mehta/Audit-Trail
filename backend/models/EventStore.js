@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+
 /*
  * Event Store Fields:
  *
@@ -28,12 +29,12 @@ const eventSchema = new mongoose.Schema({
 
   timestamp: {
     type: Date,
-    default: Date.now,
+    required: true,
   },
 
   version: {
     type: Number,
-    default: 1,
+    required: true,
   },
 });
 
