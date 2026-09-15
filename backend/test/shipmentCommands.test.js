@@ -6,6 +6,7 @@ const EventStore = require('../models/EventStore');
 
 test('POST /shipment/move records a shipment move event', async (testContext) => {
   const originalCreate = EventStore.create;
+  const originalFindOne = EventStore.findOne;
   const requestBody = {
     aggregateId: '123',
     eventType: 'CREATED',
@@ -23,12 +24,14 @@ test('POST /shipment/move records a shipment move event', async (testContext) =>
     createInput = input;
     return persistedEvent;
   };
+  EventStore.findOne = async () => null;
 
   const server = http.createServer(app);
 
   await new Promise((resolve) => server.listen(0, resolve));
   testContext.after(() => {
     EventStore.create = originalCreate;
+    EventStore.findOne = originalFindOne;
     server.close();
   });
 
@@ -61,15 +64,18 @@ for (const [name, body] of [
 ]) {
   test(`POST /shipment/move rejects a request missing ${name}`, async (testContext) => {
     const originalCreate = EventStore.create;
+    const originalFindOne = EventStore.findOne;
     let createCalled = false;
     EventStore.create = async () => {
       createCalled = true;
     };
+    EventStore.findOne = async () => null;
 
     const server = http.createServer(app);
     await new Promise((resolve) => server.listen(0, resolve));
     testContext.after(() => {
       EventStore.create = originalCreate;
+      EventStore.findOne = originalFindOne;
       server.close();
     });
 
@@ -96,16 +102,19 @@ for (const [name, body] of [
 ]) {
   test(`POST /shipment/move accepts ${name} without crashing`, async (testContext) => {
     const originalCreate = EventStore.create;
+    const originalFindOne = EventStore.findOne;
     let createInput;
     EventStore.create = async (input) => {
       createInput = input;
       return input;
     };
+    EventStore.findOne = async () => null;
 
     const server = http.createServer(app);
     await new Promise((resolve) => server.listen(0, resolve));
     testContext.after(() => {
       EventStore.create = originalCreate;
+      EventStore.findOne = originalFindOne;
       server.close();
     });
 
@@ -137,4 +146,78 @@ test('POST /shipment/move rejects an empty request body without crashing', async
   assert.deepEqual(await response.json(), {
     error: 'aggregateId and eventType are required',
   });
+});
+
+test('POST /shipment/move rejects a matching recent event as a duplicate', async (testContext) => {
+  const originalCreate = EventStore.create;
+  const originalFindOne = EventStore.findOne;
+  const requestBody = {
+    aggregateId: '123',
+    eventType: 'CREATED',
+    payload: { origin: 'Chennai' },
+  };
+  let findOneQuery;
+  let createCalled = false;
+
+  EventStore.findOne = async (query) => {
+    findOneQuery = query;
+    return { _id: 'recent-event' };
+  };
+  EventStore.create = async () => {
+    createCalled = true;
+  };
+
+  const server = http.createServer(app);
+  await new Promise((resolve) => server.listen(0, resolve));
+  testContext.after(() => {
+    EventStore.create = originalCreate;
+    EventStore.findOne = originalFindOne;
+    server.close();
+  });
+
+  const { port } = server.address();
+  const response = await fetch(`http://127.0.0.1:${port}/shipment/move`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(requestBody),
+  });
+
+  assert.equal(response.status, 409);
+  assert.deepEqual(await response.json(), { error: 'Duplicate event detected' });
+  assert.equal(createCalled, false);
+  assert.deepEqual(findOneQuery.aggregateId, requestBody.aggregateId);
+  assert.deepEqual(findOneQuery.eventType, requestBody.eventType);
+  assert.deepEqual(findOneQuery.payload, requestBody.payload);
+  assert.ok(findOneQuery.timestamp.$gte instanceof Date);
+});
+
+test('POST /shipment/move saves an event when no matching recent event exists', async (testContext) => {
+  const originalCreate = EventStore.create;
+  const originalFindOne = EventStore.findOne;
+  const requestBody = {
+    aggregateId: '123',
+    eventType: 'PICKED_UP',
+    payload: { origin: 'Chennai' },
+  };
+  const persistedEvent = { _id: 'event-2', ...requestBody };
+
+  EventStore.findOne = async () => null;
+  EventStore.create = async (input) => ({ ...persistedEvent, timestamp: input.timestamp, version: input.version });
+
+  const server = http.createServer(app);
+  await new Promise((resolve) => server.listen(0, resolve));
+  testContext.after(() => {
+    EventStore.create = originalCreate;
+    EventStore.findOne = originalFindOne;
+    server.close();
+  });
+
+  const { port } = server.address();
+  const response = await fetch(`http://127.0.0.1:${port}/shipment/move`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(requestBody),
+  });
+
+  assert.equal(response.status, 201);
 });
