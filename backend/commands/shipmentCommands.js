@@ -7,6 +7,12 @@ const DUPLICATE_EVENT_WINDOW_MS = 5_000;
 shipmentCommandsRouter.post('/move', async (req, res) => {
   const { aggregateId, eventType, payload } = req.body || {};
 
+  if (aggregateId !== undefined && typeof aggregateId !== 'string') {
+    return res.status(400).json({
+      error: 'aggregateId must be a string',
+    });
+  }
+
   if (!aggregateId || !eventType) {
     return res.status(400).json({
       error: 'aggregateId and eventType are required',
