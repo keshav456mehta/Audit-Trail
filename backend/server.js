@@ -3,11 +3,13 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const shipmentCommandsRouter = require('./commands/shipmentCommands');
+const shipmentQueriesRouter = require('./queries/shipmentQueries');
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 app.use('/shipment', shipmentCommandsRouter);
+app.use('/shipment', shipmentQueriesRouter);
 
 app.get('/', (req, res) => {
   res.send('Audit Trail backend is running');

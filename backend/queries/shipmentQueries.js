@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 
-const EventStore = require("./models/EventStore");
+const EventStore = require("../models/EventStore");
 
 router.get("/:id", async (req, res) => {
     try {
@@ -9,9 +9,15 @@ router.get("/:id", async (req, res) => {
             aggregateId: req.params.id
         }).sort({ timestamp: 1 });
 
-        res.json(events);
-    } catch (err) {
+        res.status(200).json({
+            success: true,
+            shipmentId: req.params.id,
+            count: events.length,
+            events: events
+        });
+    } catch (error) {
         res.status(500).json({
+            success: false,
             message: "Error fetching events"
         });
     }
