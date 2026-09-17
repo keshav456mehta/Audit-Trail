@@ -22,7 +22,7 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"aggregateId\": \"123\",\n  \"eventType\": \"MOVED\"\n}",
+          "raw": "{\n  \"aggregateId\": \"123\",\n  \"eventType\": \"ShipmentCreated\",\n  \"payload\": {}\n}",
           "options": {
             "raw": {
               "language": "json"
