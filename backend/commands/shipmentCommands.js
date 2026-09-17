@@ -19,7 +19,7 @@ shipmentCommandsRouter.post('/move', async (req, res) => {
     });
   }
 
-  if (payload === undefined) {
+  if (payload === undefined || payload === null) {
     return res.status(400).json({
       error: 'payload is required',
     });
