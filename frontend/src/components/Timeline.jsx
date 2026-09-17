@@ -1,35 +1,48 @@
-function Timeline({ events, shipmentId }) {
-  if (!events || events.length === 0) {
-    return (
-      <div className="mt-8">
-        <p className="text-sm text-gray-500">
-          No events found for "{shipmentId}"
-        </p>
-      </div>
-    )
-  }
+function Timeline() {
+  const dummyEvents = [
+    {
+      id: 1,
+      type: 'CONTAINER_CREATED',
+      timestamp: '2026-09-10T08:00:00Z',
+      details: 'Container CNT-4521 created at Mumbai warehouse',
+    },
+    {
+      id: 2,
+      type: 'LOADED_ON_SHIP',
+      timestamp: '2026-09-11T14:30:00Z',
+      details: 'Loaded onto vessel MSC Aurora at Nhava Sheva Port',
+    },
+    {
+      id: 3,
+      type: 'TEMPERATURE_SPIKE',
+      timestamp: '2026-09-12T22:15:00Z',
+      details: 'Temperature spiked to 8°C (threshold: 4°C)',
+    },
+  ]
 
   return (
     <div className="mt-8">
       <h2 className="text-lg font-semibold text-gray-800 mb-4">
-        Event Timeline for {shipmentId}
+        Event Timeline
       </h2>
-      <ul className="space-y-3">
-        {events.map((event) => (
-          <li
-            key={event._id}
-            className="border border-gray-200 rounded-lg p-4 bg-white shadow-sm"
+      <div className="grid gap-3">
+        {dummyEvents.map((event) => (
+          <div
+            key={event.id}
+            className="border border-gray-200 rounded-lg p-4 bg-white shadow-sm hover:shadow-md transition-shadow"
           >
-            <div className="flex justify-between items-center">
-              <span className="font-medium text-blue-600">{event.eventType}</span>
-              <span className="text-xs text-gray-400">{event.timestamp}</span>
+            <div className="flex justify-between items-center mb-1">
+              <span className="font-medium text-blue-600 text-sm">
+                {event.type}
+              </span>
+              <span className="text-xs text-gray-400">
+                {new Date(event.timestamp).toLocaleString()}
+              </span>
             </div>
-            <p className="text-sm text-gray-600 mt-1">
-              {JSON.stringify(event.payload)}
-            </p>
-          </li>
+            <p className="text-sm text-gray-600">{event.details}</p>
+          </div>
         ))}
-      </ul>
+      </div>
     </div>
   )
 }
