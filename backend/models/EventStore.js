@@ -38,6 +38,10 @@ const eventSchema = new mongoose.Schema({
     default: 1,
   },
 });
+// Indexes for efficient event queries
+eventSchema.index({ aggregateId: 1 });
+eventSchema.index({ timestamp: 1 });
+
 
 eventSchema.index({ aggregateId: 1 });
 
