@@ -3,12 +3,6 @@ const EventStore = require('../models/EventStore');
 
 const shipmentCommandsRouter = express.Router();
 const DUPLICATE_EVENT_WINDOW_MS = 5_000;
-const VALID_EVENT_TYPES = new Set([
-  'ShipmentCreated',
-  'ShipmentPacked',
-  'ShipmentShipped',
-  'ShipmentDelivered',
-]);
 
 shipmentCommandsRouter.post('/move', async (req, res) => {
   const { aggregateId, eventType, payload } = req.body || {};
@@ -25,13 +19,7 @@ shipmentCommandsRouter.post('/move', async (req, res) => {
     });
   }
 
-  if (!VALID_EVENT_TYPES.has(eventType)) {
-    return res.status(400).json({
-      error: 'eventType must be one of: ShipmentCreated, ShipmentPacked, ShipmentShipped, ShipmentDelivered',
-    });
-  }
-
-  if (payload === undefined || payload === null) {
+  if (payload === undefined) {
     return res.status(400).json({
       error: 'payload is required',
     });

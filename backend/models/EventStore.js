@@ -20,7 +20,6 @@ const eventSchema = new mongoose.Schema({
   eventType: {
     type: String,
     required: true,
-    enum: ['ShipmentCreated', 'ShipmentPacked', 'ShipmentShipped', 'ShipmentDelivered'],
   },
 
   payload: {

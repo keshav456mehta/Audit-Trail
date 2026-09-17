@@ -16,10 +16,10 @@ const events = [
   },
   {
     aggregateId: "shipment-001",
-    eventType: "ShipmentShipped",
+    eventType: "ShipmentDispatched",
     payload: {
       shipmentId: "shipment-001",
-      status: "shipped",
+      status: "dispatched",
     },
     timestamp: new Date(),
     version: 2,

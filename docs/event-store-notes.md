@@ -8,8 +8,7 @@ It allows related events to be grouped for a specific entity.
 ## eventType
 
 Defines what action or event occurred.
-The only valid values are `ShipmentCreated`, `ShipmentPacked`,
-`ShipmentShipped`, and `ShipmentDelivered`.
+Examples include `ShipmentCreated` and `ShipmentDispatched`.
 
 ## payload
 

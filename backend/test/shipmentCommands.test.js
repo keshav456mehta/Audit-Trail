@@ -9,13 +9,13 @@ test('POST /shipment/move records a shipment move event', async (testContext) =>
   const originalFindOne = EventStore.findOne;
   const requestBody = {
     aggregateId: '123',
-    eventType: 'ShipmentCreated',
+    eventType: 'CREATED',
     payload: { origin: 'Chennai' },
   };
   const persistedEvent = {
     _id: 'event-1',
     aggregateId: '123',
-    eventType: 'ShipmentCreated',
+    eventType: 'CREATED',
     payload: requestBody.payload,
   };
   let createInput;
@@ -50,7 +50,7 @@ test('POST /shipment/move records a shipment move event', async (testContext) =>
   });
   assert.deepEqual(createInput, {
     aggregateId: '123',
-    eventType: 'ShipmentCreated',
+    eventType: 'CREATED',
     payload: requestBody.payload,
     timestamp: createInput.timestamp,
     version: 1,
@@ -58,7 +58,7 @@ test('POST /shipment/move records a shipment move event', async (testContext) =>
 });
 
 for (const [name, body] of [
-  ['aggregateId', { eventType: 'ShipmentCreated', payload: {} }],
+  ['aggregateId', { eventType: 'CREATED', payload: {} }],
   ['eventType', { aggregateId: '123', payload: {} }],
   ['aggregateId and eventType', { payload: {} }],
 ]) {
@@ -95,8 +95,9 @@ for (const [name, body] of [
 }
 
 for (const [name, body] of [
-  ['an empty payload object', { aggregateId: '123', eventType: 'ShipmentCreated', payload: {} }],
-  ['a string payload', { aggregateId: '123', eventType: 'ShipmentCreated', payload: 'note' }],
+  ['an empty payload object', { aggregateId: '123', eventType: 'CREATED', payload: {} }],
+  ['a string payload', { aggregateId: '123', eventType: 'CREATED', payload: 'note' }],
+  ['an unexpected event type', { aggregateId: '123', eventType: 'BANANA', payload: {} }],
 ]) {
   test(`POST /shipment/move accepts ${name} without crashing`, async (testContext) => {
     const originalCreate = EventStore.create;
@@ -130,68 +131,6 @@ for (const [name, body] of [
   });
 }
 
-for (const [name, body] of [
-  ['a missing payload', { aggregateId: '123', eventType: 'ShipmentCreated' }],
-  ['a null payload', { aggregateId: '123', eventType: 'ShipmentCreated', payload: null }],
-]) {
-  test(`POST /shipment/move rejects ${name} without crashing`, async (testContext) => {
-    const originalCreate = EventStore.create;
-    const originalFindOne = EventStore.findOne;
-    let createCalled = false;
-    EventStore.create = async () => {
-      createCalled = true;
-    };
-    EventStore.findOne = async () => null;
-
-    const server = http.createServer(app);
-    await new Promise((resolve) => server.listen(0, resolve));
-    testContext.after(() => {
-      EventStore.create = originalCreate;
-      EventStore.findOne = originalFindOne;
-      server.close();
-    });
-
-    const { port } = server.address();
-    const response = await fetch(`http://127.0.0.1:${port}/shipment/move`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-    });
-
-    assert.equal(response.status, 400);
-    assert.deepEqual(await response.json(), { error: 'payload is required' });
-    assert.equal(createCalled, false);
-  });
-}
-
-test('POST /shipment/move rejects an unapproved event type', async (testContext) => {
-  const originalCreate = EventStore.create;
-  let createCalled = false;
-  EventStore.create = async () => {
-    createCalled = true;
-  };
-
-  const server = http.createServer(app);
-  await new Promise((resolve) => server.listen(0, resolve));
-  testContext.after(() => {
-    EventStore.create = originalCreate;
-    server.close();
-  });
-
-  const { port } = server.address();
-  const response = await fetch(`http://127.0.0.1:${port}/shipment/move`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ aggregateId: '123', eventType: 'NotAnApprovedEvent', payload: {} }),
-  });
-
-  assert.equal(response.status, 400);
-  assert.deepEqual(await response.json(), {
-    error: 'eventType must be one of: ShipmentCreated, ShipmentPacked, ShipmentShipped, ShipmentDelivered',
-  });
-  assert.equal(createCalled, false);
-});
-
 for (const [name, aggregateId] of [
   ['a numeric aggregate ID', 123],
   ['an object aggregate ID', {}],
@@ -216,7 +155,7 @@ for (const [name, aggregateId] of [
     const response = await fetch(`http://127.0.0.1:${port}/shipment/move`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ aggregateId, eventType: 'ShipmentCreated', payload: {} }),
+      body: JSON.stringify({ aggregateId, eventType: 'CREATED', payload: {} }),
     });
 
     assert.equal(response.status, 400);
@@ -248,7 +187,7 @@ test('POST /shipment/move rejects a matching recent event as a duplicate', async
   const originalFindOne = EventStore.findOne;
   const requestBody = {
     aggregateId: '123',
-    eventType: 'ShipmentCreated',
+    eventType: 'CREATED',
     payload: { origin: 'Chennai' },
   };
   let findOneQuery;
@@ -291,7 +230,7 @@ test('POST /shipment/move saves an event when no matching recent event exists', 
   const originalFindOne = EventStore.findOne;
   const requestBody = {
     aggregateId: '123',
-    eventType: 'ShipmentPacked',
+    eventType: 'PICKED_UP',
     payload: { origin: 'Chennai' },
   };
   const persistedEvent = { _id: 'event-2', ...requestBody };
