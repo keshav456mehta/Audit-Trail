@@ -20,7 +20,7 @@ const eventSchema = new mongoose.Schema({
   eventType: {
     type: String,
     required: true,
-    enum: ["ShipmentCreated", "ShipmentDispatched"],
+    enum: ["ShipmentCreated", "ShipmentPacked", "ShipmentShipped", "ShipmentDelivered"],
   },
 
   payload: {
@@ -30,13 +30,15 @@ const eventSchema = new mongoose.Schema({
 
   timestamp: {
     type: Date,
-    required: true,
+    default: Date.now,
   },
 
   version: {
     type: Number,
-    required: true,
+    default: 1,
   },
 });
+
+eventSchema.index({ aggregateId: 1 });
 
 module.exports = mongoose.model("EventStore", eventSchema);
