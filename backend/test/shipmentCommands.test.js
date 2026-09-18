@@ -161,6 +161,45 @@ for (const [name, body] of [
   });
 }
 
+test('POST /shipment/move rejects an eventType outside the schema enum', async (testContext) => {
+  const originalCreate = EventStore.create;
+  const originalFindOne = EventStore.findOne;
+  let createCalled = false;
+  let findOneCalled = false;
+  EventStore.create = async () => {
+    createCalled = true;
+  };
+  EventStore.findOne = async () => {
+    findOneCalled = true;
+  };
+
+  const server = http.createServer(app);
+  await new Promise((resolve) => server.listen(0, resolve));
+  testContext.after(() => {
+    EventStore.create = originalCreate;
+    EventStore.findOne = originalFindOne;
+    server.close();
+  });
+
+  const { port } = server.address();
+  const response = await fetch(`http://127.0.0.1:${port}/shipment/move`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      aggregateId: '123',
+      eventType: 'ShipmentCancelled',
+      payload: {},
+    }),
+  });
+
+  assert.equal(response.status, 400);
+  assert.deepEqual(await response.json(), {
+    error: 'eventType must be one of: ShipmentCreated, ShipmentPacked, ShipmentShipped, ShipmentDelivered',
+  });
+  assert.equal(createCalled, false);
+  assert.equal(findOneCalled, false);
+});
+
 for (const [name, aggregateId] of [
   ['a numeric aggregate ID', 123],
   ['an object aggregate ID', {}],
