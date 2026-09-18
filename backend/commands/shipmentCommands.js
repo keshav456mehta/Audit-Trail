@@ -3,6 +3,7 @@ const EventStore = require('../models/EventStore');
 
 const shipmentCommandsRouter = express.Router();
 const DUPLICATE_EVENT_WINDOW_MS = 5_000;
+const ALLOWED_EVENT_TYPES = EventStore.schema.path('eventType').enumValues;
 
 shipmentCommandsRouter.post('/move', async (req, res) => {
   const { aggregateId, eventType, payload } = req.body || {};
@@ -16,6 +17,12 @@ shipmentCommandsRouter.post('/move', async (req, res) => {
   if (!aggregateId || !eventType) {
     return res.status(400).json({
       error: 'aggregateId and eventType are required',
+    });
+  }
+
+  if (!ALLOWED_EVENT_TYPES.includes(eventType)) {
+    return res.status(400).json({
+      error: `eventType must be one of: ${ALLOWED_EVENT_TYPES.join(', ')}`,
     });
   }
 
