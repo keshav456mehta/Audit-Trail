@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 
 const EventStore = require("../models/EventStore");
+const foldShipmentEvents = require("../foldShipmentEvents");
 
 router.get("/:id", async (req, res) => {
     try {
@@ -9,9 +10,12 @@ router.get("/:id", async (req, res) => {
             aggregateId: req.params.id
         }).sort({ timestamp: 1 });
 
+        const currentState = foldShipmentEvents(events);
+
         res.status(200).json({
             success: true,
             shipmentId: req.params.id,
+            currentState,
             count: events.length,
             events: events
         });
