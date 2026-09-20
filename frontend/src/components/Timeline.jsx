@@ -1,4 +1,8 @@
+import { useState } from 'react'
+
 function Timeline() {
+  const [hasSearched, setHasSearched] = useState(false)
+
   const dummyEvents = [
     {
       id: 1,
@@ -25,6 +29,16 @@ function Timeline() {
     LOADED_ON_SHIP: { dot: 'bg-blue-500', text: 'text-blue-600' },
     TEMPERATURE_SPIKE: { dot: 'bg-red-500', text: 'text-red-600' },
     ARRIVED_AT_PORT: { dot: 'bg-purple-500', text: 'text-purple-600' },
+  }
+
+  if (!hasSearched) {
+    return (
+      <div className="mt-8 px-2 sm:px-0">
+        <div className="border border-dashed border-gray-300 rounded-lg p-8 text-center text-gray-400">
+          Search a shipment ID...
+        </div>
+      </div>
+    )
   }
 
   return (
