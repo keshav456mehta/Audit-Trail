@@ -1,19 +1,18 @@
 import { useState } from 'react'
 
-function SearchBar({ onSearchResults }) {
+function SearchBar({ onSearchResults, onSearchStart, onSearchError }) {
   const [searchValue, setSearchValue] = useState('')
-  const [error, setError] = useState('')
 
   const handleSearch = async () => {
     if (!searchValue.trim()) return
-    setError('')
+    onSearchStart()
 
     try {
       const res = await fetch(`http://localhost:5000/shipment/${searchValue}`)
       const data = await res.json()
       onSearchResults(data)
     } catch (err) {
-      setError('Failed to fetch shipment data')
+      onSearchError('Failed to fetch shipment data')
       console.error(err)
     }
   }
@@ -27,8 +26,6 @@ function SearchBar({ onSearchResults }) {
         onChange={(e) => setSearchValue(e.target.value)}
       />
       <button onClick={handleSearch}>Search</button>
-
-      {error && <p style={{ color: 'red' }}>{error}</p>}
     </div>
   )
 }
