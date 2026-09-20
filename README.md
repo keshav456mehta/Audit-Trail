@@ -8,36 +8,54 @@ Event Sourcing backend for tracking shipment events.
 
 `/api/shipments`
 
-### 1. Get Shipment Events
+### GET /api/shipments/:id
 
-**Endpoint**
+Returns the current shipment state and complete event history.
 
-`GET /api/shipments/:id`
+#### Example Request
 
-**Description**
+GET /api/shipments/SHIP123
 
-Returns all events for the given shipment ID.
-
-**Example Request**
-
-`GET /api/shipments/SHIP123`
-
-**Success Response**
+#### Success Response
 
 ```json
 {
   "success": true,
   "shipmentId": "SHIP123",
-  "count": 2,
-  "events": []
+  "currentState": {
+    "shipmentId": "SHIP123",
+    "status": "DELIVERED"
+  },
+  "eventHistory": [
+    {
+      "aggregateId": "SHIP123",
+      "eventType": "ShipmentCreated",
+      "timestamp": "2026-09-18T09:00:00Z"
+    },
+    {
+      "aggregateId": "SHIP123",
+      "eventType": "ShipmentPacked",
+      "timestamp": "2026-09-18T10:00:00Z"
+    },
+    {
+      "aggregateId": "SHIP123",
+      "eventType": "ShipmentShipped",
+      "timestamp": "2026-09-18T11:00:00Z"
+    },
+    {
+      "aggregateId": "SHIP123",
+      "eventType": "ShipmentDelivered",
+      "timestamp": "2026-09-18T12:00:00Z"
+    }
+  ]
 }
 ```
 
-**Error Response**
+#### Error Response
 
 ```json
 {
   "success": false,
-  "message": "Error fetching events"
+  "message": "Error fetching shipment"
 }
 ```
