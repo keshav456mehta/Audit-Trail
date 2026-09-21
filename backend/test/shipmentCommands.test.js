@@ -200,6 +200,50 @@ test('POST /shipment/move rejects an eventType outside the schema enum', async (
   assert.equal(findOneCalled, false);
 });
 
+test('POST /shipment/move increments the version from the aggregate latest event', async (testContext) => {
+  const originalCreate = EventStore.create;
+  const originalFindOne = EventStore.findOne;
+  const requestBody = {
+    aggregateId: 'versioned-shipment',
+    eventType: 'ShipmentPacked',
+    payload: { location: 'Chennai' },
+  };
+  const findOneCalls = [];
+  let createInput;
+
+  EventStore.findOne = async (...args) => {
+    findOneCalls.push(args);
+    return findOneCalls.length === 1 ? null : { version: 1 };
+  };
+  EventStore.create = async (input) => {
+    createInput = input;
+    return input;
+  };
+
+  const server = http.createServer(app);
+  await new Promise((resolve) => server.listen(0, resolve));
+  testContext.after(() => {
+    EventStore.create = originalCreate;
+    EventStore.findOne = originalFindOne;
+    server.close();
+  });
+
+  const { port } = server.address();
+  const response = await fetch(`http://127.0.0.1:${port}/shipment/move`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(requestBody),
+  });
+
+  assert.equal(response.status, 201);
+  assert.equal(createInput.version, 2);
+  assert.deepEqual(findOneCalls[1], [
+    { aggregateId: requestBody.aggregateId },
+    null,
+    { sort: { version: -1 } },
+  ]);
+});
+
 for (const [name, aggregateId] of [
   ['a numeric aggregate ID', 123],
   ['an object aggregate ID', {}],
