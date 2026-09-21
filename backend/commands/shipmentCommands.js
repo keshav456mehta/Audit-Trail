@@ -47,12 +47,18 @@ shipmentCommandsRouter.post('/move', async (req, res) => {
       });
     }
 
+    const latestEvent = await EventStore.findOne(
+      { aggregateId },
+      null,
+      { sort: { version: -1 } },
+    );
+
     const event = await EventStore.create({
       aggregateId,
       eventType,
       payload,
       timestamp: new Date(),
-      version: 1,
+      version: (latestEvent?.version || 0) + 1,
     });
 
     return res.status(201).json({
