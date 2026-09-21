@@ -34,8 +34,8 @@ const eventSchema = new mongoose.Schema({
   },
 
   version: {
-  type: Number,
-  required: true,
+    type: Number,
+    default: 1,
   },
 });
 
