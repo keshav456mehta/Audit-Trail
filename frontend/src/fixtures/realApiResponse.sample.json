@@ -1,0 +1,26 @@
+{
+  "currentState": {
+    "containerId": "CONT12345",
+    "location": "Port of Rotterdam",
+    "temperature": 4.2,
+    "status": "IN_TRANSIT",
+    "lastUpdated": "2026-09-20T14:32:00Z"
+  },
+  "eventHistory": [
+    {
+      "eventType": "CONTAINER_CREATED",
+      "timestamp": "2026-09-15T08:00:00Z",
+      "payload": { "origin": "Mumbai Port" }
+    },
+    {
+      "eventType": "LOADED_ON_SHIP",
+      "timestamp": "2026-09-16T10:15:00Z",
+      "payload": { "vesselName": "MSC Aurora" }
+    },
+    {
+      "eventType": "TEMPERATURE_SPIKE",
+      "timestamp": "2026-09-18T22:40:00Z",
+      "payload": { "temperature": 9.8, "threshold": 8.0 }
+    }
+  ]
+}
