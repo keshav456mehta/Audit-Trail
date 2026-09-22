@@ -34,32 +34,22 @@ shipmentCommandsRouter.post('/move', async (req, res) => {
 
   try {
     const duplicateCutoff = new Date(Date.now() - DUPLICATE_EVENT_WINDOW_MS);
-    const duplicateEvent = await EventStore.findOne({
+    const recentEvents = await EventStore.find({
       aggregateId,
       eventType,
-      payload,
       timestamp: { $gte: duplicateCutoff },
     });
+
+    const payloadStr = JSON.stringify(payload);
+    const duplicateEvent = recentEvents.find(
+      (e) => JSON.stringify(e.payload) === payloadStr,
+    );
 
     if (duplicateEvent) {
       return res.status(409).json({
         error: 'Duplicate event detected',
       });
     }
-
-
-const latestEvent = await EventStore.findOne({ aggregateId })
-  .sort({ version: -1 });
-
-const nextVersion = latestEvent ? latestEvent.version + 1 : 1;
-
-const event = await EventStore.create({
-  aggregateId,
-  eventType,
-  payload,
-  timestamp: new Date(),
-  version: nextVersion,
-});
 
     const latestEvent = await EventStore.findOne(
       { aggregateId },
@@ -74,7 +64,6 @@ const event = await EventStore.create({
       timestamp: new Date(),
       version: (latestEvent?.version || 0) + 1,
     });
-
 
     return res.status(201).json({
       success: true,

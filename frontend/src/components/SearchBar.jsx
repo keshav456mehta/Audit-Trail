@@ -1,13 +1,20 @@
 import { useState } from 'react'
 
-function SearchBar({ onSearch }) {
+function SearchBar({ onSearchResults, onSearchStart, onSearchError }) {
   const [searchValue, setSearchValue] = useState('')
 
-  const handleSearch = () => {
+  const handleSearch = async () => {
     if (!searchValue.trim()) return
-    console.log('Searching for container:', searchValue)
-    onSearch(searchValue)
-    // TODO: connect this to the actual CQRS query route
+    onSearchStart()
+
+    try {
+      const res = await fetch(`http://localhost:5000/shipment/${searchValue}`)
+      const data = await res.json()
+      onSearchResults(data)
+    } catch (err) {
+      onSearchError('Failed to fetch shipment data')
+      console.error(err)
+    }
   }
 
   return (
