@@ -40,12 +40,16 @@ shipmentCommandsRouter.post('/move', async (req, res) => {
 
   try {
     const duplicateCutoff = new Date(Date.now() - DUPLICATE_EVENT_WINDOW_MS);
-    const duplicateEvent = await EventStore.findOne({
+    const recentEvents = await EventStore.find({
       aggregateId,
       eventType,
-      payload,
       timestamp: { $gte: duplicateCutoff },
     });
+
+    const payloadStr = JSON.stringify(payload);
+    const duplicateEvent = recentEvents.find(
+      (e) => JSON.stringify(e.payload) === payloadStr,
+    );
 
     if (duplicateEvent) {
       return res.status(409).json({
