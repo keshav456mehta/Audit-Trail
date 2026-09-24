@@ -5,7 +5,8 @@
     "dev": "cd frontend && npm run dev",
     "build": "cd frontend && npm run build",
     "lint": "cd frontend && npm run lint",
-    "preview": "cd frontend && npm run preview"
+    "preview": "cd frontend && npm run preview",
+    "start": "react-scripts start"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.3.3"
