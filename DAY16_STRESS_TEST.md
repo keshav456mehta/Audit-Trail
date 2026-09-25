@@ -18,4 +18,10 @@ Concurrent writes to the same aggregate can receive the same version because the
 
 Requests for different aggregate IDs stayed isolated. The duplicate-event check also uses a read-then-write sequence, so simultaneous matching requests can all pass before any of them is stored. No false duplicate rejections were observed in this run.
 
-These are expected limitations of the current basic concurrency handling. No locking or optimistic concurrency changes were made, in keeping with the Day 16 scope.
+## Day 17 Triage
+
+The duplicate versions are a real concurrency limitation: version selection and event insertion are separate operations. Fixing this safely requires an atomic per-aggregate version allocator or a compare-and-swap retry design. Adding a unique `{ aggregateId, version }` index alone is not a safe immediate fix because the stress run already recorded duplicate pairs; MongoDB would reject index creation until existing data is reconciled. A retry loop without a database-enforced uniqueness condition would not prevent collisions.
+
+The simultaneous duplicate-request race also remains. A reliable fix needs a client-supplied idempotency key with a unique constraint; the current payload-based time-window check cannot serialize concurrent matching requests. Keep both issues as known limitations for this project scope pending agreement on the larger data-model change.
+
+No concurrency code or database index change was retained. The Day 16 stress results above remain the verification evidence; the stress test was not rerun because behavior was not changed. Decide on atomic version allocation and idempotency keys with the project team before shipping a concurrency fix.
