@@ -1,6 +1,11 @@
 import React from "react";
+import "./Timeline.css";
+import Timeline, { dummyNotFoundData } from "./Timeline";
 
-// Dummy data matching the NEW real-API shape (Day 14: shape only, not live yet)
+// inside your component, for testing:
+<Timeline currentState={dummyNotFoundData.currentState} eventHistory={dummyNotFoundData.eventHistory} containerId="CNT-9999-INVALID" />
+
+
 const dummyTimelineData = {
   currentState: {
     containerId: "CNT-2024-001",
@@ -16,8 +21,38 @@ const dummyTimelineData = {
   ]
 };
 
-// Props now match the real API response shape: { currentState, eventHistory }
-function Timeline({ currentState = dummyTimelineData.currentState, eventHistory = dummyTimelineData.eventHistory }) {
+// Dummy data for the NEW error state (Day 15) — a shipment that doesn't exist
+const dummyNotFoundData = {
+  currentState: null,
+  eventHistory: []
+};
+
+function ShipmentNotFound({ containerId }) {
+  return (
+    <div className="shipment-not-found">
+      <div className="not-found-icon">⚠️</div>
+      <h3>Shipment Not Found</h3>
+      <p>
+        We couldn't find any records for container
+        {containerId ? <strong> "{containerId}"</strong> : " this container"}.
+      </p>
+      <p className="not-found-hint">
+        Please check the container ID and try again, or contact support if you believe this is an error.
+      </p>
+    </div>
+  );
+}
+
+function Timeline({
+  currentState = dummyTimelineData.currentState,
+  eventHistory = dummyTimelineData.eventHistory,
+  containerId
+}) {
+  // Error state: no current state means the shipment/container doesn't exist
+  if (!currentState) {
+    return <ShipmentNotFound containerId={containerId} />;
+  }
+
   return (
     <div className="timeline-container">
       <div className="timeline-current-state">
@@ -44,4 +79,5 @@ function Timeline({ currentState = dummyTimelineData.currentState, eventHistory 
   );
 }
 
-export default Timeline;    
+export default Timeline;
+export { dummyNotFoundData, dummyTimelineData };  
