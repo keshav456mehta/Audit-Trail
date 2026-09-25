@@ -1,3 +1,21 @@
+import "./Timeline.css";
+
+function ShipmentNotFound({ shipmentId }) {
+  return (
+    <div className="shipment-not-found">
+      <div className="not-found-icon">??</div>
+      <h3>Shipment Not Found</h3>
+      <p>
+        We couldn't find any records for
+        {shipmentId ? <strong> "{shipmentId}"</strong> : " this shipment"}.
+      </p>
+      <p className="not-found-hint">
+        Please check the shipment ID and try again.
+      </p>
+    </div>
+  );
+}
+
 function Timeline({ events, shipmentId, loading, error }) {
   const eventStyles = {
     ShipmentCreated: { dot: 'bg-green-500', text: 'text-green-600' },
@@ -39,9 +57,7 @@ function Timeline({ events, shipmentId, loading, error }) {
   if (events.length === 0) {
     return (
       <div className="mt-8 px-2 sm:px-0">
-        <p className="text-sm text-gray-500">
-          No events found for "{shipmentId}"
-        </p>
+        <ShipmentNotFound shipmentId={shipmentId} />
       </div>
     )
   }
