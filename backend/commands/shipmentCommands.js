@@ -8,6 +8,12 @@ const ALLOWED_EVENT_TYPES = EventStore.schema.path('eventType').enumValues;
 shipmentCommandsRouter.post('/move', async (req, res) => {
   const { aggregateId, eventType, payload } = req.body || {};
 
+  console.log('POST /shipment/move called', {
+    timestamp: new Date().toISOString(),
+    aggregateId,
+    eventType,
+  });
+
   if (aggregateId !== undefined && typeof aggregateId !== 'string') {
     return res.status(400).json({
       error: 'aggregateId must be a string',
@@ -34,12 +40,16 @@ shipmentCommandsRouter.post('/move', async (req, res) => {
 
   try {
     const duplicateCutoff = new Date(Date.now() - DUPLICATE_EVENT_WINDOW_MS);
-    const duplicateEvent = await EventStore.findOne({
+    const recentEvents = await EventStore.find({
       aggregateId,
       eventType,
-      payload,
       timestamp: { $gte: duplicateCutoff },
     });
+
+    const payloadStr = JSON.stringify(payload);
+    const duplicateEvent = recentEvents.find(
+      (e) => JSON.stringify(e.payload) === payloadStr,
+    );
 
     if (duplicateEvent) {
       return res.status(409).json({
@@ -47,12 +57,18 @@ shipmentCommandsRouter.post('/move', async (req, res) => {
       });
     }
 
+    const latestEvent = await EventStore.findOne(
+      { aggregateId },
+      null,
+      { sort: { version: -1 } },
+    );
+
     const event = await EventStore.create({
       aggregateId,
       eventType,
       payload,
       timestamp: new Date(),
-      version: 1,
+      version: (latestEvent?.version || 0) + 1,
     });
 
     return res.status(201).json({
@@ -61,7 +77,12 @@ shipmentCommandsRouter.post('/move', async (req, res) => {
       event,
     });
   } catch (error) {
-    console.error('Failed to record shipment move event:', error);
+    console.error('POST /shipment/move failed', {
+      timestamp: new Date().toISOString(),
+      aggregateId,
+      eventType,
+      error: error instanceof Error ? error.message : String(error),
+    });
     return res.status(500).json({
       success: false,
       message: 'Failed to record shipment move event',

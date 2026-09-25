@@ -4,6 +4,16 @@ const assert = require('node:assert/strict');
 const { app } = require('../server');
 const EventStore = require('../models/EventStore');
 
+const originalFind = EventStore.find;
+
+test.beforeEach(() => {
+  EventStore.find = async () => [];
+});
+
+test.after(() => {
+  EventStore.find = originalFind;
+});
+
 test('POST /shipment/move records a shipment move event', async (testContext) => {
   const originalCreate = EventStore.create;
   const originalFindOne = EventStore.findOne;
@@ -200,6 +210,50 @@ test('POST /shipment/move rejects an eventType outside the schema enum', async (
   assert.equal(findOneCalled, false);
 });
 
+test('POST /shipment/move increments the version from the aggregate latest event', async (testContext) => {
+  const originalCreate = EventStore.create;
+  const originalFindOne = EventStore.findOne;
+  const requestBody = {
+    aggregateId: 'versioned-shipment',
+    eventType: 'ShipmentPacked',
+    payload: { location: 'Chennai' },
+  };
+  const findOneCalls = [];
+  let createInput;
+
+  EventStore.findOne = async (...args) => {
+    findOneCalls.push(args);
+    return { version: 1 };
+  };
+  EventStore.create = async (input) => {
+    createInput = input;
+    return input;
+  };
+
+  const server = http.createServer(app);
+  await new Promise((resolve) => server.listen(0, resolve));
+  testContext.after(() => {
+    EventStore.create = originalCreate;
+    EventStore.findOne = originalFindOne;
+    server.close();
+  });
+
+  const { port } = server.address();
+  const response = await fetch(`http://127.0.0.1:${port}/shipment/move`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(requestBody),
+  });
+
+  assert.equal(response.status, 201);
+  assert.equal(createInput.version, 2);
+  assert.deepEqual(findOneCalls[0], [
+    { aggregateId: requestBody.aggregateId },
+    null,
+    { sort: { version: -1 } },
+  ]);
+});
+
 for (const [name, aggregateId] of [
   ['a numeric aggregate ID', 123],
   ['an object aggregate ID', {}],
@@ -253,18 +307,17 @@ test('POST /shipment/move rejects an empty request body without crashing', async
 
 test('POST /shipment/move rejects a matching recent event as a duplicate', async (testContext) => {
   const originalCreate = EventStore.create;
-  const originalFindOne = EventStore.findOne;
   const requestBody = {
     aggregateId: '123',
     eventType: 'ShipmentCreated',
     payload: { origin: 'Chennai' },
   };
-  let findOneQuery;
+  let findQuery;
   let createCalled = false;
 
-  EventStore.findOne = async (query) => {
-    findOneQuery = query;
-    return { _id: 'recent-event' };
+  EventStore.find = async (query) => {
+    findQuery = query;
+    return [{ _id: 'recent-event', payload: requestBody.payload }];
   };
   EventStore.create = async () => {
     createCalled = true;
@@ -274,7 +327,6 @@ test('POST /shipment/move rejects a matching recent event as a duplicate', async
   await new Promise((resolve) => server.listen(0, resolve));
   testContext.after(() => {
     EventStore.create = originalCreate;
-    EventStore.findOne = originalFindOne;
     server.close();
   });
 
@@ -288,10 +340,9 @@ test('POST /shipment/move rejects a matching recent event as a duplicate', async
   assert.equal(response.status, 409);
   assert.deepEqual(await response.json(), { error: 'Duplicate event detected' });
   assert.equal(createCalled, false);
-  assert.deepEqual(findOneQuery.aggregateId, requestBody.aggregateId);
-  assert.deepEqual(findOneQuery.eventType, requestBody.eventType);
-  assert.deepEqual(findOneQuery.payload, requestBody.payload);
-  assert.ok(findOneQuery.timestamp.$gte instanceof Date);
+  assert.deepEqual(findQuery.aggregateId, requestBody.aggregateId);
+  assert.deepEqual(findQuery.eventType, requestBody.eventType);
+  assert.ok(findQuery.timestamp.$gte instanceof Date);
 });
 
 test('POST /shipment/move saves an event when no matching recent event exists', async (testContext) => {
