@@ -22,3 +22,47 @@
   color: #6b7280;
   margin-top: 8px;
 }
+
+.current-status-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.current-status-label {
+  font-size: 13px;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.current-status-badge {
+  font-size: 22px;
+  font-weight: 700;
+  padding: 6px 16px;
+  border-radius: 6px;
+  letter-spacing: 0.02em;
+}
+
+.status-success {
+  background-color: #dcfce7;
+  color: #15803d;
+}
+
+.status-warning {
+  background-color: #fef3c7;
+  color: #b45309;
+}
+
+.status-info {
+  background-color: #dbeafe;
+  color: #1d4ed8;
+}
+
+.status-neutral {
+  background-color: #f3f4f6;
+  color: #374151;
+}
