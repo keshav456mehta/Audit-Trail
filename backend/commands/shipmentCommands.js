@@ -8,12 +8,7 @@ const ALLOWED_EVENT_TYPES = EventStore.schema.path('eventType').enumValues;
 shipmentCommandsRouter.post('/move', async (req, res) => {
   const { aggregateId, eventType, payload } = req.body || {};
 
-  console.log('POST /shipment/move called', {
-    timestamp: new Date().toISOString(),
-    aggregateId,
-    eventType,
-  });
-
+  // Validate the request before querying MongoDB so malformed commands fail fast.
   if (aggregateId !== undefined && typeof aggregateId !== 'string') {
     return res.status(400).json({
       error: 'aggregateId must be a string',
@@ -39,6 +34,7 @@ shipmentCommandsRouter.post('/move', async (req, res) => {
   }
 
   try {
+    // Reject an identical event for this shipment and event type within the short retry window.
     const duplicateCutoff = new Date(Date.now() - DUPLICATE_EVENT_WINDOW_MS);
     const recentEvents = await EventStore.find({
       aggregateId,
@@ -57,12 +53,14 @@ shipmentCommandsRouter.post('/move', async (req, res) => {
       });
     }
 
+    // Read the latest aggregate version so each new event advances its sequence by one.
     const latestEvent = await EventStore.findOne(
       { aggregateId },
       null,
       { sort: { version: -1 } },
     );
 
+    // Persist the validated command as an event with its timestamp and next aggregate version.
     const event = await EventStore.create({
       aggregateId,
       eventType,
