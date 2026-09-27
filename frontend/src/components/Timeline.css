@@ -66,3 +66,10 @@
   background-color: #f3f4f6;
   color: #374151;
 }
+
+.no-events-message {
+  color: #6b7280;
+  font-size: 13px;
+  font-style: italic;
+  padding: 12px 0;
+}
