@@ -60,3 +60,58 @@ Ye command chalao:
 Get-Content "docs\ever-store-varification.md"
 
 Uska output bhejo. Main check karke bataunga ki isi file ko Day 13–14 documentation ke liye use karna hai ya nayi MD file banani hai.
+
+Day 15–16 — Mid Review and Schema Compatibility
+Day 15 (Sep 23) — Mid Review Support
+Objective
+
+Be prepared to explain the Event Store schema during the mid review.
+
+Schema Fields
+aggregateId — identifies the shipment/entity associated with the event.
+eventType — identifies the type of event and is restricted to the agreed event types.
+payload — stores the event-specific data.
+timestamp — records when the event occurred.
+version — tracks the event version for the aggregate.
+Validation
+
+The schema requires the key Event Store fields and validates eventType against the supported event types.
+
+Indexes
+
+The schema includes indexes on:
+
+eventSchema.index({ aggregateId: 1 });
+eventSchema.index({ timestamp: 1 });
+
+These indexes support efficient aggregate-based and timestamp-based event queries.
+
+Day 16 (Sep 24) — V. Divyesh Review
+Objective
+
+Review V. Divyesh's query/fold and command logic to confirm that it reads and uses the Event Store schema correctly.
+
+Query Review
+
+The shipment query retrieves events using:
+
+const events = await EventStore.find({
+    aggregateId: req.params.id
+}).sort({ timestamp: 1 });
+
+The query correctly uses aggregateId to retrieve events for a shipment and sorts them by timestamp.
+
+Command Review
+
+The shipment command flow uses the Event Store fields as follows:
+
+aggregateId — used for shipment identification and event lookup.
+eventType — validated against the schema enum.
+payload — stored with the event and used during duplicate detection.
+timestamp — stored when the event is created.
+version — incremented from the latest event for the same aggregate.
+Review Result
+
+The reviewed query and command logic are compatible with the Event Store schema.
+
+No schema mismatch was identified during this review.
