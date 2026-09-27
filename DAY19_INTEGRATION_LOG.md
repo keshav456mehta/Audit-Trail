@@ -30,3 +30,7 @@ Sent 20 concurrent `POST /shipment/move` requests with distinct payloads to one 
 ## Handoff
 
 No endpoint, persistence, or frontend code changes were needed for the sequential end-to-end flow. The concurrent version race remains open and should be prioritized if concurrent writes are part of the integration acceptance criteria. The live test records are isolated under the two IDs above.
+
+## Follow-up sanity pass
+
+The backend and MongoDB were already reachable locally on ports 5000 and 27017. A fresh `POST /shipment/move` for `day19-followup-62c0d97ff49941b6b1bd6ce3e7bad855` returned `201 Created` with version 1. The following GET returned one `ShipmentCreated` event and current state `CREATED`. No new issue was found in this sequential write/read path.
