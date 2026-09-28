@@ -3,6 +3,7 @@ const EventStore = require('../models/EventStore');
 
 const shipmentCommandsRouter = express.Router();
 const DUPLICATE_EVENT_WINDOW_MS = 5_000;
+const VERSION_RETRY_LIMIT = 3;
 const ALLOWED_EVENT_TYPES = EventStore.schema.path('eventType').enumValues;
 
 shipmentCommandsRouter.post('/move', async (req, res) => {
@@ -53,21 +54,29 @@ shipmentCommandsRouter.post('/move', async (req, res) => {
       });
     }
 
-    // Read the latest aggregate version so each new event advances its sequence by one.
-    const latestEvent = await EventStore.findOne(
-      { aggregateId },
-      null,
-      { sort: { version: -1 } },
-    );
+    let event;
+    for (let attempt = 0; attempt < VERSION_RETRY_LIMIT; attempt += 1) {
+      const latestEvent = await EventStore.findOne(
+        { aggregateId },
+        null,
+        { sort: { version: -1 } },
+      );
 
-    // Persist the validated command as an event with its timestamp and next aggregate version.
-    const event = await EventStore.create({
-      aggregateId,
-      eventType,
-      payload,
-      timestamp: new Date(),
-      version: (latestEvent?.version || 0) + 1,
-    });
+      try {
+        event = await EventStore.create({
+          aggregateId,
+          eventType,
+          payload,
+          timestamp: new Date(),
+          version: (latestEvent?.version || 0) + 1,
+        });
+        break;
+      } catch (error) {
+        if (error?.code !== 11000 || attempt === VERSION_RETRY_LIMIT - 1) {
+          throw error;
+        }
+      }
+    }
 
     return res.status(201).json({
       success: true,
