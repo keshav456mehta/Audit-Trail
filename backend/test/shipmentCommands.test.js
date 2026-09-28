@@ -254,6 +254,49 @@ test('POST /shipment/move increments the version from the aggregate latest event
   ]);
 });
 
+test('POST /shipment/move retries after a concurrent version collision', async (testContext) => {
+  const originalCreate = EventStore.create;
+  const originalFindOne = EventStore.findOne;
+  const attemptedVersions = [];
+  let lookupCount = 0;
+
+  EventStore.findOne = async () => {
+    lookupCount += 1;
+    return lookupCount === 1 ? { version: 1 } : { version: 2 };
+  };
+  EventStore.create = async (input) => {
+    attemptedVersions.push(input.version);
+    if (attemptedVersions.length === 1) {
+      const error = new Error('Duplicate aggregate version');
+      error.code = 11000;
+      throw error;
+    }
+    return input;
+  };
+
+  const server = http.createServer(app);
+  await new Promise((resolve) => server.listen(0, resolve));
+  testContext.after(() => {
+    EventStore.create = originalCreate;
+    EventStore.findOne = originalFindOne;
+    server.close();
+  });
+
+  const { port } = server.address();
+  const response = await fetch(`http://127.0.0.1:${port}/shipment/move`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      aggregateId: 'concurrent-shipment',
+      eventType: 'ShipmentPacked',
+      payload: { location: 'Chennai' },
+    }),
+  });
+
+  assert.equal(response.status, 201);
+  assert.deepEqual(attemptedVersions, [2, 3]);
+});
+
 for (const [name, aggregateId] of [
   ['a numeric aggregate ID', 123],
   ['an object aggregate ID', {}],

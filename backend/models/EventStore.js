@@ -42,5 +42,6 @@ const eventSchema = new mongoose.Schema({
 // Indexes for efficient event queries
 eventSchema.index({ aggregateId: 1 });
 eventSchema.index({ timestamp: 1 });
+eventSchema.index({ aggregateId: 1, version: 1 }, { unique: true });
 
 module.exports = mongoose.model("EventStore", eventSchema);
