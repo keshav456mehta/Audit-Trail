@@ -1,12 +1,4 @@
 import "./Timeline.css";
-import Timeline, {
-  dummyTimelineData,
-  dummyNotFoundData,
-  dummyEmptyHistoryData,
-  dummySingleEventData,
-  dummyLongHistoryData
-} from "./Timeline";
-
 
 function ShipmentNotFound({ shipmentId }) {
   return (
@@ -23,68 +15,6 @@ function ShipmentNotFound({ shipmentId }) {
     </div>
   );
 }
-
-// 1. Empty history — container exists but has zero recorded events
-const dummyEmptyHistoryData = {
-  currentState: {
-    containerId: "CNT-2024-002",
-    status: "CONTAINER_CREATED",
-    location: "Mumbai Port",
-    lastUpdated: "2026-09-25T09:00:00Z"
-  },
-  eventHistory: []
-};
-
-// 2. Single event — just created, nothing else happened yet
-const dummySingleEventData = {
-  currentState: {
-    containerId: "CNT-2024-003",
-    status: "CONTAINER_CREATED",
-    location: "Mumbai Port",
-    lastUpdated: "2026-09-26T07:00:00Z"
-  },
-  eventHistory: [
-    { eventId: "evt-1", eventType: "CONTAINER_CREATED", timestamp: "2026-09-26T07:00:00Z", payload: { origin: "Mumbai" } }
-  ]
-};
-
-// 3. Long history — many events, tests scroll/overflow behavior
-const dummyLongHistoryData = {
-  currentState: {
-    containerId: "CNT-2024-004",
-    status: "ARRIVED_AT_PORT",
-    location: "Port of Singapore",
-    lastUpdated: "2026-09-27T18:00:00Z"
-  },
-  eventHistory: [
-    { eventId: "evt-1", eventType: "CONTAINER_CREATED", timestamp: "2026-09-10T08:00:00Z", payload: { origin: "Chennai" } },
-    { eventId: "evt-2", eventType: "LOADED_ON_SHIP", timestamp: "2026-09-11T10:00:00Z", payload: { vessel: "MV Pacific" } },
-    { eventId: "evt-3", eventType: "TEMPERATURE_SPIKE", timestamp: "2026-09-13T22:00:00Z", payload: { tempC: 30 } },
-    { eventId: "evt-4", eventType: "TEMPERATURE_SPIKE", timestamp: "2026-09-15T02:00:00Z", payload: { tempC: 33 } },
-    { eventId: "evt-5", eventType: "LOADED_ON_SHIP", timestamp: "2026-09-17T06:00:00Z", payload: { vessel: "MV Pacific - Transshipment" } },
-    { eventId: "evt-6", eventType: "TEMPERATURE_SPIKE", timestamp: "2026-09-19T14:00:00Z", payload: { tempC: 29 } },
-    { eventId: "evt-7", eventType: "LOADED_ON_SHIP", timestamp: "2026-09-21T09:00:00Z", payload: { vessel: "MV Pacific - Final Leg" } },
-    { eventId: "evt-8", eventType: "ARRIVED_AT_PORT", timestamp: "2026-09-27T18:00:00Z", payload: { port: "Singapore" } }
-  ]
-};
-
-
-<div className="timeline-events">
-  <h3>Event History</h3>
-  {eventHistory.length === 0 ? (
-    <p className="no-events-message">No events recorded yet for this container.</p>
-  ) : (
-    <ul>
-      {eventHistory.map((event) => (
-        <li key={event.eventId}>
-          <span className="event-type">{event.eventType}</span>
-          <span className="event-time">{new Date(event.timestamp).toLocaleString()}</span>
-          <pre className="event-payload">{JSON.stringify(event.payload, null, 2)}</pre>
-        </li>
-      ))}
-    </ul>
-  )}
-</div>
 
 const statusColorMap = {
   ShipmentCreated: "status-neutral",
