@@ -1,6 +1,6 @@
 import { useState } from 'react'
 
-function SearchBar({ onSearchResults, onSearchStart, onSearchError }) {
+function SearchBar({ onSearchResults, onSearchStart, onSearchError, light }) {
   const [searchValue, setSearchValue] = useState('')
 
   const handleSearch = async () => {
@@ -18,21 +18,29 @@ function SearchBar({ onSearchResults, onSearchStart, onSearchError }) {
   }
 
   return (
-    <div className="flex items-center gap-2 p-4">
+    <div className="flex items-center gap-2">
       <input
         type="text"
-        placeholder="Search by Container ID..."
+        placeholder="Enter shipment ID..."
         value={searchValue}
         onChange={(e) => setSearchValue(e.target.value)}
         onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-        className="border border-gray-300 rounded-lg px-4 py-2 w-64 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        className={`font-mono flex-1 rounded-lg px-4 py-3 text-sm transition-colors focus:outline-none focus:ring-1 ${
+          light
+            ? 'bg-white border border-[#E8DFC9] text-[#3B3021] placeholder-[#B3A88F] focus:border-[#C2703D] focus:ring-[#C2703D]'
+            : 'bg-[#111827] border border-[#1F2937] text-[#E5E7EB] placeholder-[#6B7280] focus:border-[#14B8A6] focus:ring-[#14B8A6]'
+        }`}
       />
       <button
         onClick={handleSearch}
-        className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
         disabled={!searchValue.trim()}
+        className={`font-semibold px-5 py-3 rounded-lg text-sm transition-colors ${
+          light
+            ? 'bg-[#C2703D] hover:bg-[#A85E30] disabled:bg-[#EDE6D3] disabled:text-[#B3A88F] text-white'
+            : 'bg-[#14B8A6] hover:bg-[#0d9488] disabled:bg-[#1F2937] disabled:text-[#6B7280] text-black'
+        }`}
       >
-        Search
+        Track
       </button>
     </div>
   )

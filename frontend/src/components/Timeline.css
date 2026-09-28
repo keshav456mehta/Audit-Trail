@@ -1,95 +1,21 @@
-.shipment-not-found {
-  text-align: center;
-  padding: 40px 20px;
-  border: 1px dashed #d1d5db;
-  border-radius: 8px;
-  background-color: #fafafa;
-  color: #374151;
+@keyframes pulseGlow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(20, 184, 166, 0.6); }
+  50% { box-shadow: 0 0 0 8px rgba(20, 184, 166, 0); }
 }
 
-.not-found-icon {
-  font-size: 32px;
-  margin-bottom: 12px;
+@keyframes fadeSlideIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
-.shipment-not-found h3 {
-  margin: 0 0 8px;
-  color: #b91c1c;
+.stage-active {
+  animation: pulseGlow 2s infinite;
 }
 
-.not-found-hint {
-  font-size: 13px;
-  color: #6b7280;
-  margin-top: 8px;
+.event-card {
+  animation: fadeSlideIn 0.4s ease-out both;
 }
 
-.current-status-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 20px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid #e5e7eb;
-}
-
-.current-status-label {
-  font-size: 13px;
-  color: #6b7280;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.current-status-badge {
-  font-size: 22px;
-  font-weight: 700;
-  padding: 6px 16px;
-  border-radius: 6px;
-  letter-spacing: 0.02em;
-}
-
-.status-success {
-  background-color: #dcfce7;
-  color: #15803d;
-}
-
-.status-warning {
-  background-color: #fef3c7;
-  color: #b45309;
-}
-
-.status-info {
-  background-color: #dbeafe;
-  color: #1d4ed8;
-}
-
-.status-neutral {
-  background-color: #f3f4f6;
-  color: #374151;
-}
-
-.no-events-message {
-  color: #6b7280;
-  font-size: 13px;
-  font-style: italic;
-  padding: 12px 0;
-}
-
-.timeline-events ul {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  max-height: 400px;
-  overflow-y: auto;
-}
-
-.timeline-events li {
-  padding: 10px 0;
-  border-bottom: 1px solid #e5e7eb;
-}
-
-.event-payload {
-  white-space: pre-wrap;
-  word-break: break-word;
-  font-size: 12px;
-  margin: 6px 0 0;
+.stage-fill {
+  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
 }
