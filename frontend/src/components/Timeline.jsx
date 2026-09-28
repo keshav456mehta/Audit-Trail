@@ -1,115 +1,132 @@
-import "./Timeline.css";
+import "./Timeline.css"
 
-function ShipmentNotFound({ shipmentId }) {
-  return (
-    <div className="shipment-not-found">
-      <div className="not-found-icon">??</div>
-      <h3>Shipment Not Found</h3>
-      <p>
-        We couldn't find any records for
-        {shipmentId ? <strong> "{shipmentId}"</strong> : " this shipment"}.
-      </p>
-      <p className="not-found-hint">
-        Please check the shipment ID and try again.
-      </p>
-    </div>
-  );
+const STAGES = ["ShipmentCreated", "ShipmentPacked", "ShipmentShipped", "ShipmentDelivered"]
+const STAGE_LABELS = { ShipmentCreated: "Created", ShipmentPacked: "Packed", ShipmentShipped: "Shipped", ShipmentDelivered: "Delivered" }
+
+const darkStyles = {
+  ShipmentCreated: { dot: "#14B8A6", label: "text-[#14B8A6]" },
+  ShipmentPacked: { dot: "#3B82F6", label: "text-[#3B82F6]" },
+  ShipmentShipped: { dot: "#F59E0B", label: "text-[#F59E0B]" },
+  ShipmentDelivered: { dot: "#10B981", label: "text-[#10B981]" },
 }
 
-const statusColorMap = {
-  ShipmentCreated: "status-neutral",
-  ShipmentPacked: "status-info",
-  ShipmentShipped: "status-warning",
-  ShipmentDelivered: "status-success",
-};
-
-function CurrentStatusBadge({ status }) {
-  const colorClass = statusColorMap[status] || "status-neutral";
-  return (
-    <div className="current-status-header">
-      <span className="current-status-label">Current Status</span>
-      <span className={`current-status-badge ${colorClass}`}>{status}</span>
-    </div>
-  );
+const lightStyles = {
+  ShipmentCreated: { dot: "#C2703D", label: "text-[#C2703D]" },
+  ShipmentPacked: { dot: "#6D8B74", label: "text-[#6D8B74]" },
+  ShipmentShipped: { dot: "#B08968", label: "text-[#B08968]" },
+  ShipmentDelivered: { dot: "#4A7A5C", label: "text-[#4A7A5C]" },
 }
 
-function Timeline({ events, shipmentId, loading, error }) {
-  const eventStyles = {
-    ShipmentCreated: { dot: 'bg-green-500', text: 'text-green-600' },
-    ShipmentPacked: { dot: 'bg-blue-500', text: 'text-blue-600' },
-    ShipmentShipped: { dot: 'bg-purple-500', text: 'text-purple-600' },
-    ShipmentDelivered: { dot: 'bg-emerald-600', text: 'text-emerald-700' },
-  }
+function ProgressStepper({ currentStatus, light }) {
+  const currentIndex = STAGES.indexOf(currentStatus)
+  const fillPercent = currentIndex >= 0 ? (currentIndex / (STAGES.length - 1)) * 100 : 0
+  const fillGradient = light ? "from-[#C2703D] to-[#4A7A5C]" : "from-[#14B8A6] to-[#F59E0B]"
+
+  return (
+    <div className="mb-10 px-2">
+      <div className={`relative h-1.5 rounded-full mb-6 ${light ? "bg-[#EDE6D3]" : "bg-[#1F2937]"}`}>
+        <div
+          className={`stage-fill absolute inset-y-0 left-0 bg-gradient-to-r ${fillGradient} rounded-full`}
+          style={{ width: `${fillPercent}%` }}
+        ></div>
+      </div>
+      <div className="flex justify-between">
+        {STAGES.map((stage, i) => {
+          const done = i <= currentIndex
+          const active = i === currentIndex
+          const doneColor = light ? "#C2703D" : "#14B8A6"
+          return (
+            <div key={stage} className="flex flex-col items-center gap-2 flex-1">
+              <div
+                className={`w-4 h-4 rounded-full border-2 ${active ? "stage-active" : ""}`}
+                style={{
+                  backgroundColor: done ? doneColor : (light ? "#FAF6EE" : "#111827"),
+                  borderColor: done ? doneColor : (light ? "#DDD3BE" : "#1F2937"),
+                }}
+              ></div>
+              <span className={`text-[11px] font-mono ${done ? (light ? "text-[#3B3021]" : "text-[#E5E7EB]") : (light ? "text-[#B3A88F]" : "text-[#4B5563]")}`}>
+                {STAGE_LABELS[stage]}
+              </span>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+function ShipmentNotFound({ shipmentId, light }) {
+  return (
+    <div className={`text-center py-16 px-6 border border-dashed rounded-xl ${light ? "border-[#DDD3BE] bg-white/50" : "border-[#1F2937] bg-[#111827]/40"}`}>
+      <div className="text-3xl mb-3">?</div>
+      <h3 className={`font-semibold mb-1 ${light ? "text-[#B54A3C]" : "text-[#EF4444]"}`}>Shipment not found</h3>
+      <p className={`text-sm ${light ? "text-[#8A7F6A]" : "text-[#9CA3AF]"}`}>
+        No records for <span className={`font-mono ${light ? "text-[#3B3021]" : "text-[#E5E7EB]"}`}>"{shipmentId}"</span>. Check the ID and try again.
+      </p>
+    </div>
+  )
+}
+
+function Timeline({ events, shipmentId, loading, error, light }) {
+  const eventStyles = light ? lightStyles : darkStyles
 
   if (loading) {
     return (
-      <div className="mt-8 px-2 sm:px-0">
-        <div className="border border-dashed border-gray-300 rounded-lg p-8 text-center text-gray-400">
-          Searching...
-        </div>
+      <div className={`mt-10 text-center py-16 border border-dashed rounded-xl font-mono text-sm ${light ? "border-[#DDD3BE] text-[#B3A88F]" : "border-[#1F2937] text-[#6B7280]"}`}>
+        searching...
       </div>
     )
   }
 
   if (error) {
     return (
-      <div className="mt-8 px-2 sm:px-0">
-        <div className="border border-red-300 rounded-lg p-8 text-center text-red-500">
-          {error}
-        </div>
+      <div className={`mt-10 text-center py-16 rounded-xl text-sm ${light ? "border border-[#E8B4A8] bg-[#FBEAE6] text-[#B54A3C]" : "border border-[#7F1D1D] bg-[#1F2937]/40 text-[#EF4444]"}`}>
+        {error}
       </div>
     )
   }
 
   if (!events) {
     return (
-      <div className="mt-8 px-2 sm:px-0">
-        <div className="border border-dashed border-gray-300 rounded-lg p-8 text-center text-gray-400">
-          Search a shipment ID...
-        </div>
+      <div className={`mt-10 text-center py-16 border border-dashed rounded-xl text-sm ${light ? "border-[#DDD3BE] text-[#B3A88F]" : "border-[#1F2937] text-[#6B7280]"}`}>
+        Enter a shipment ID to see its history
       </div>
     )
   }
 
   if (events.length === 0) {
-    return (
-      <div className="mt-8 px-2 sm:px-0">
-        <ShipmentNotFound shipmentId={shipmentId} />
-      </div>
-    )
+    return <div className="mt-10"><ShipmentNotFound shipmentId={shipmentId} light={light} /></div>
   }
 
   const latestStatus = events[events.length - 1].eventType
 
   return (
-    <div className="mt-8 px-2 sm:px-0">
-      <CurrentStatusBadge status={latestStatus} />
-      <h2 className="text-lg font-semibold text-gray-800 mb-6 mt-4">
-        Event Timeline for {shipmentId}
+    <div className="mt-10">
+      <ProgressStepper currentStatus={latestStatus} light={light} />
+
+      <h2 className={`text-sm font-semibold uppercase tracking-wide mb-4 ${light ? "text-[#8A7F6A]" : "text-[#9CA3AF]"}`}>
+        Event history — <span className={`font-mono normal-case ${light ? "text-[#3B3021]" : "text-[#E5E7EB]"}`}>{shipmentId}</span>
       </h2>
+
       <div className="relative pl-6">
-        <div className="absolute left-2 top-0 bottom-0 w-0.5 bg-gray-300"></div>
-        <div className="space-y-6">
-          {events.map((event) => {
-            const style = eventStyles[event.eventType] || {
-              dot: 'bg-gray-400',
-              text: 'text-gray-600',
-            }
+        <div className={`absolute left-[7px] top-1 bottom-1 w-px ${light ? "bg-[#E8DFC9]" : "bg-[#1F2937]"}`}></div>
+        <div className="space-y-3">
+          {events.map((event, i) => {
+            const style = eventStyles[event.eventType] || { dot: light ? "#B3A88F" : "#6B7280", label: light ? "text-[#8A7F6A]" : "text-[#9CA3AF]" }
             return (
-              <div key={event._id} className="relative">
+              <div key={event._id} className="event-card relative" style={{ animationDelay: `${i * 60}ms` }}>
                 <div
-                  className={`absolute -left-6 top-1.5 w-3 h-3 rounded-full ${style.dot} border-2 border-white shadow`}
+                  className={`absolute -left-6 top-4 w-3 h-3 rounded-full border-2 ${light ? "border-[#FAF6EE]" : "border-black"}`}
+                  style={{ backgroundColor: style.dot }}
                 ></div>
-                <div className="border border-gray-200 rounded-lg p-4 bg-white shadow-sm hover:shadow-md transition-shadow">
-                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-1 gap-1">
-                    <span className={`font-medium text-sm ${style.text}`}>
-                      {event.eventType}
-                    </span>
-                    <span className="text-xs text-gray-400">
+                <div className={`rounded-lg p-4 border transition-colors ${light ? "bg-white border-[#E8DFC9] hover:border-[#C2703D]/50" : "bg-[#111827] border-[#1F2937] hover:border-[#14B8A6]/50"}`}>
+                  <div className="flex justify-between items-center mb-1">
+                    <span className={`font-semibold text-sm ${style.label}`}>{event.eventType}</span>
+                    <span className={`text-xs font-mono ${light ? "text-[#B3A88F]" : "text-[#6B7280]"}`}>
                       {new Date(event.timestamp).toLocaleString()}
                     </span>
                   </div>
-                  <p className="text-sm text-gray-600">{JSON.stringify(event.payload)}</p>
+                  <p className={`text-xs font-mono ${light ? "text-[#8A7F6A]" : "text-[#9CA3AF]"}`}>{JSON.stringify(event.payload)}</p>
                 </div>
               </div>
             )
