@@ -59,3 +59,38 @@ GET /api/shipments/SHIP123
   "message": "Error fetching shipment"
 }
 ```
+## Event Store Schema
+
+The Event Store stores shipment events used by the event-sourcing flow.
+
+### Fields
+
+| Field | Description |
+|---|---|
+| ggregateId | Identifies the shipment/entity associated with the event. |
+| eventType | Identifies the type of event that occurred. |
+| payload | Stores the data associated with the event. |
+| 	imestamp | Records when the event occurred. |
+| ersion | Tracks the event version for the aggregate. |
+
+### Supported Event Types
+
+The Event Store supports the following shipment event types:
+
+- ShipmentCreated
+- ShipmentPacked
+- ShipmentShipped
+- ShipmentDelivered
+
+### Validation and Indexing
+
+- Required fields are validated by the Event Store schema.
+- eventType is restricted to the supported event types.
+- An index is maintained on ggregateId for aggregate-based event queries.
+- An index is maintained on 	imestamp for timestamp-based event queries.
+- New events use the next version for the related aggregate.
+- Duplicate events are checked before a new event is stored.
+
+### Query Compatibility
+
+Shipment events are retrieved using ggregateId and ordered by 	imestamp. The retrieved events are used by the shipment fold logic to calculate the current shipment state.
