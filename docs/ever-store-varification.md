@@ -115,3 +115,16 @@ Review Result
 The reviewed query and command logic are compatible with the Event Store schema.
 
 No schema mismatch was identified during this review.
+
+# Day 19 — Full Regression Test
+
+## Objective
+
+Perform a full regression test to confirm that the existing shipment event-sourcing functionality continues to work after the Event Store schema, validation, versioning, and duplicate-event changes.
+
+## Regression Test
+
+The existing shipment command test suite was executed using:
+
+```bash
+node --test backend/test/shipmentCommands.test.js
