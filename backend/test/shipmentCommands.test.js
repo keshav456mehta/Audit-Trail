@@ -4,6 +4,8 @@ const assert = require('node:assert/strict');
 const { app } = require('../server');
 const EventStore = require('../models/EventStore');
 
+const EVENT_TYPES = EventStore.schema.path('eventType').enumValues;
+
 const originalFind = EventStore.find;
 
 test.beforeEach(() => {
@@ -12,6 +14,68 @@ test.beforeEach(() => {
 
 test.after(() => {
   EventStore.find = originalFind;
+});
+
+for (const eventType of EVENT_TYPES) {
+  test(`POST /shipment/move saves valid ${eventType} data at version 1`, async (testContext) => {
+    const originalCreate = EventStore.create;
+    const originalFindOne = EventStore.findOne;
+    const requestBody = {
+      aggregateId: `valid-${eventType}`,
+      eventType,
+      payload: { reference: 'regression-check' },
+    };
+    let createInput;
+    EventStore.findOne = async () => null;
+    EventStore.create = async (input) => {
+      createInput = input;
+      return input;
+    };
+
+    const server = http.createServer(app);
+    await new Promise((resolve) => server.listen(0, resolve));
+    testContext.after(() => {
+      EventStore.create = originalCreate;
+      EventStore.findOne = originalFindOne;
+      server.close();
+    });
+
+    const response = await fetch(`http://127.0.0.1:${server.address().port}/shipment/move`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(requestBody),
+    });
+
+    assert.equal(response.status, 201);
+    assert.equal(createInput.aggregateId, requestBody.aggregateId);
+    assert.equal(createInput.eventType, eventType);
+    assert.deepEqual(createInput.payload, requestBody.payload);
+    assert.equal(createInput.version, 1);
+    assert.ok(createInput.timestamp instanceof Date);
+  });
+}
+
+test('EventStore schema requires aggregateId, eventType, and payload and restricts eventType to its enum', async () => {
+  const missingFields = new EventStore({});
+  const missingError = await missingFields.validate().then(() => null, (error) => error);
+  assert.ok(missingError);
+  for (const field of ['aggregateId', 'eventType', 'payload']) {
+    assert.ok(missingError.errors[field], `${field} should be required`);
+  }
+
+  const unsupportedEvent = new EventStore({
+    aggregateId: 'invalid-schema-event',
+    eventType: 'ShipmentCancelled',
+    payload: {},
+  });
+  const enumError = await unsupportedEvent.validate().then(() => null, (error) => error);
+  assert.ok(enumError?.errors.eventType);
+  assert.deepEqual(EVENT_TYPES, [
+    'ShipmentCreated',
+    'ShipmentPacked',
+    'ShipmentShipped',
+    'ShipmentDelivered',
+  ]);
 });
 
 test('POST /shipment/move records a shipment move event', async (testContext) => {
