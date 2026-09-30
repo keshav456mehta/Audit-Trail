@@ -135,6 +135,8 @@ for (const [name, body] of [
   ['aggregateId', { eventType: 'ShipmentCreated', payload: {} }],
   ['eventType', { aggregateId: '123', payload: {} }],
   ['aggregateId and eventType', { payload: {} }],
+  ['a blank eventType', { aggregateId: '123', eventType: ' ', payload: {} }],
+  ['a non-string eventType', { aggregateId: '123', eventType: 7, payload: {} }],
 ]) {
   test(`POST /shipment/move rejects a request missing ${name}`, async (testContext) => {
     const originalCreate = EventStore.create;
@@ -171,6 +173,7 @@ for (const [name, body] of [
 for (const [name, body] of [
   ['an empty payload object', { aggregateId: '123', eventType: 'ShipmentCreated', payload: {} }],
   ['a string payload', { aggregateId: '123', eventType: 'ShipmentCreated', payload: 'note' }],
+  ['an array payload', { aggregateId: '123', eventType: 'ShipmentCreated', payload: ['item'] }],
 ]) {
   test(`POST /shipment/move accepts ${name} without crashing`, async (testContext) => {
     const originalCreate = EventStore.create;
@@ -359,6 +362,41 @@ test('POST /shipment/move retries after a concurrent version collision', async (
 
   assert.equal(response.status, 201);
   assert.deepEqual(attemptedVersions, [2, 3]);
+});
+
+test('POST /shipment/move returns a clean server error when version collisions exhaust retries', async (testContext) => {
+  const originalCreate = EventStore.create;
+  const originalFindOne = EventStore.findOne;
+  EventStore.findOne = async () => ({ version: 1 });
+  EventStore.create = async () => {
+    const error = new Error('Duplicate aggregate version');
+    error.code = 11000;
+    throw error;
+  };
+
+  const server = http.createServer(app);
+  await new Promise((resolve) => server.listen(0, resolve));
+  testContext.after(() => {
+    EventStore.create = originalCreate;
+    EventStore.findOne = originalFindOne;
+    server.close();
+  });
+
+  const response = await fetch(`http://127.0.0.1:${server.address().port}/shipment/move`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      aggregateId: 'exhausted-retries',
+      eventType: 'ShipmentPacked',
+      payload: { location: 'Chennai' },
+    }),
+  });
+
+  assert.equal(response.status, 500);
+  assert.deepEqual(await response.json(), {
+    success: false,
+    message: 'Failed to record shipment move event',
+  });
 });
 
 for (const [name, aggregateId] of [
