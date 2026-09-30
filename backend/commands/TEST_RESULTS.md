@@ -1,6 +1,6 @@
 # Day 12: POST /shipment/move Test Results
 
-## Regression pass (Day 21)
+## Final validation pass (Day 22)
 
 The backend regression suite was run with `npm.cmd test` from `backend/` after
 the Phase 3 and Day 20 shipment command changes. The suite uses a stubbed
@@ -11,17 +11,21 @@ is checked directly with Mongoose.
 | --- | --- | --- |
 | Event type list | `ShipmentCreated`, `ShipmentPacked`, `ShipmentShipped`, and `ShipmentDelivered`, read from the schema enum | All four save valid payloads with version 1 |
 | Required fields | Missing aggregate ID, event type, or both; missing/null payload; direct schema checks for aggregateId, eventType, and payload | Correct 400 responses or required-field validation errors |
-| Invalid data | Numeric, object, array, or boolean aggregate ID; enum-external `ShipmentCancelled`; empty request body | Correct 400 responses; no save or version lookup for unsupported event types |
-| Payload cases | Empty object and string payload accepted; missing and null payload rejected | Passed |
+| Invalid data | Numeric, object, array, or boolean aggregate ID; blank, non-string, or enum-external `eventType`; empty request body | Correct 400 responses; no save or version lookup for unsupported event types |
+| Payload cases | Empty object, string, and array payload accepted; missing and null payload rejected | Passed |
 | Duplicate event | Same aggregate, type, and payload in the recent-event window | Correct 409 response; no save |
 | Versioning | First event starts at version 1; next event after version 1 saves at version 2 | Passed |
 | Concurrent version collision | Duplicate-key collision causes version lookup and save retry | Retries versions 2 then 3 and succeeds |
+| Exhausted version retries | All three writes encounter a duplicate-key collision | Clean 500 JSON response; no crash or leaked database error |
 | Schema enum | EventStore rejects `ShipmentCancelled` and exposes the four expected enum values | Passed |
 
-Result: **23 tests passed, 0 failed**. This includes the pre-existing tests for
-request validation, duplicate handling, version increments, and the Day 20
-concurrent-version retry. No regression was found, so no production code fix
-was needed.
+Result: **27 tests passed, 0 failed**. Final validation found that blank and
+non-string event types returned an enum error rather than the required-field
+error. The route now treats missing, non-string, and blank event types uniformly
+and returns 400 before querying or writing. The suite also verifies request
+validation, duplicate handling, version increments, the Day 20 concurrent
+version retry, and the clean response after retry exhaustion. No live MongoDB
+integration test was run; route persistence calls are stubbed.
 
 ## Original Day 12 handoff cases
 

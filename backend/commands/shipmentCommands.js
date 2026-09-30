@@ -16,7 +16,7 @@ shipmentCommandsRouter.post('/move', async (req, res) => {
     });
   }
 
-  if (!aggregateId || !eventType) {
+  if (!aggregateId || typeof eventType !== 'string' || !eventType.trim()) {
     return res.status(400).json({
       error: 'aggregateId and eventType are required',
     });
