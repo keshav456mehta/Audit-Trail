@@ -55,7 +55,7 @@ GET /api/shipments/SHIP123
 
 ```json
 {
-  "success": true,
+  "success": false,
   "message": "Error fetching shipment"
 }
 ```
