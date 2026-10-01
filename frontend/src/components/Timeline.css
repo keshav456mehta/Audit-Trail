@@ -96,3 +96,39 @@
   font-size: 12px;
   color: #6b7280;
 }
+
+.timeline-container {
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 16px;
+  box-sizing: border-box;
+}
+
+@media (max-width: 480px) {
+  .timeline-container {
+    padding: 12px;
+  }
+
+  .current-status-badge {
+    font-size: 16px;
+    padding: 4px 10px;
+  }
+
+  .timeline-current-state p,
+  .shipment-not-found p {
+    font-size: 14px;
+  }
+
+  .timeline-events ul {
+    max-height: 300px; /* shorter scroll area on small screens */
+  }
+
+  .event-type {
+    font-size: 12px;
+  }
+
+  .event-time {
+    font-size: 11px;
+  }
+}
