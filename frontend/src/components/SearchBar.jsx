@@ -3,11 +3,18 @@ import "./SearchBar.css";
 
 function SearchBar({ onSearch }) {
   const [containerId, setContainerId] = useState("");
+  const [isSearching, setIsSearching] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (containerId.trim()) {
-      onSearch(containerId.trim());
+    const trimmedId = containerId.trim();
+    if (!trimmedId || isSearching) return;
+
+    setIsSearching(true);
+    try {
+      await onSearch(trimmedId);
+    } finally {
+      setIsSearching(false);
     }
   };
 
@@ -19,9 +26,14 @@ function SearchBar({ onSearch }) {
         placeholder="Enter container ID..."
         value={containerId}
         onChange={(e) => setContainerId(e.target.value)}
+        disabled={isSearching}
       />
-      <button type="submit" className="search-bar-button">
-        Search
+      <button
+        type="submit"
+        className="search-bar-button"
+        disabled={isSearching || !containerId.trim()}
+      >
+        {isSearching ? "Searching..." : "Search"}
       </button>
     </form>
   );
