@@ -3,6 +3,7 @@ import Header from './components/Header'
 import SearchBar from './components/SearchBar'
 import Timeline from './components/Timeline'
 import CometField from './components/CometField'
+import IntegrationChecklist from './components/IntegrationChecklist'
 
 const THEMES = [
   { id: 'light', label: 'Daylight', swatch: '#C2703D' },
@@ -52,6 +53,7 @@ function App() {
         </div>
 
         <main className="max-w-2xl mx-auto px-6 py-10">
+          <IntegrationChecklist light={isLight} />
           <SearchBar
             light={isLight}
             onSearchStart={() => {

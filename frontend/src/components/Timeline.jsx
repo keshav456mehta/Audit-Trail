@@ -105,7 +105,7 @@ function Timeline({ events, shipmentId, loading, error, light }) {
       <ProgressStepper currentStatus={latestStatus} light={light} />
 
       <h2 className={`text-sm font-semibold uppercase tracking-wide mb-4 ${light ? "text-[#8A7F6A]" : "text-[#9CA3AF]"}`}>
-        Event history — <span className={`font-mono normal-case ${light ? "text-[#3B3021]" : "text-[#E5E7EB]"}`}>{shipmentId}</span>
+        Event history - <span className={`font-mono normal-case ${light ? "text-[#3B3021]" : "text-[#E5E7EB]"}`}>{shipmentId}</span>
       </h2>
 
       <div className="relative pl-6">
