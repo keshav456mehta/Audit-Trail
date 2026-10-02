@@ -128,3 +128,60 @@ The existing shipment command test suite was executed using:
 
 ```bash
 node --test backend/test/shipmentCommands.test.js
+
+
+# Day 20 — Integration Testing Support
+
+## Objective
+
+Support Keshav's integration testing and identify or fix any Event Store schema issues that appear during the integration flow.
+
+## Integration Flow
+
+The expected end-to-end flow is:
+
+Frontend  
+↓  
+`POST /move`  
+↓  
+EventStore  
+↓  
+`GET /:id`  
+↓  
+Timeline
+
+## Integration Checklist
+
+- Confirm integration testing timing with Keshav.
+- Keep the backend current and ready for testing.
+- Verify the `POST /move` request during the integration test.
+- Confirm that events reach the EventStore with the expected shipment ID and payload.
+- Monitor backend logs during the integration walkthrough.
+- If an issue is found, reproduce it and identify whether it is related to the route, validation, or event write.
+- Apply the smallest safe fix for any confirmed issue.
+- Re-run the failing integration step after the fix.
+- Confirm that the newly written event appears correctly in the shipment timeline.
+
+## Schema Fields to Verify
+
+The integration flow should remain compatible with the Event Store fields:
+
+- `aggregateId`
+- `eventType`
+- `payload`
+- `timestamp`
+- `version`
+
+## Day 20 Result
+
+The latest `main` branch was merged into the `Rakesh` branch successfully.
+
+The working tree was verified as clean after removing an unintended untracked file.
+
+No Event Store schema issue was identified during the current preparation/check.
+
+Further fixes should only be made if an actual integration-test failure is observed.
+
+## Status
+
+Day 20 integration-testing preparation is complete.
