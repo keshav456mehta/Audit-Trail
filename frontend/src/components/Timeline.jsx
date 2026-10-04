@@ -1,4 +1,25 @@
 import "./Timeline.css"
+const [isLoading, setIsLoading] = useState(false);
+const [error, setError] = useState(null);
+
+const handleSearch = async (containerId) => {
+  setIsLoading(true);
+  setError(null);
+  try {
+    const data = await fetchContainerData(containerId);
+    setTimelineData(data);
+  } catch (err) {
+    setError("Something went wrong fetching this container. Please try again.");
+  } finally {
+    setIsLoading(false);
+  }
+};
+
+{isLoading && <p className="loading-message">Loading container data...</p>}
+{error && <p className="error-message">{error}</p>}
+{!isLoading && !error && timelineData && <Timeline {...timelineData} />}
+
+
 
 const STAGES = ["ShipmentCreated", "ShipmentPacked", "ShipmentShipped", "ShipmentDelivered"]
 const STAGE_LABELS = { ShipmentCreated: "Created", ShipmentPacked: "Packed", ShipmentShipped: "Shipped", ShipmentDelivered: "Delivered" }

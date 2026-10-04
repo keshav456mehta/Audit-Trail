@@ -52,45 +52,6 @@ body {
   to { transform: rotate(360deg); }
 }
 
-/* ---- Aurora theme: ambient flowing color bands, no mouse ---- */
-.bg-aurora {
-  position: fixed;
-  inset: 0;
-  overflow: hidden;
-  z-index: 0;
-  pointer-events: none;
-  background: #000;
-}
-.bg-aurora::before,
-.bg-aurora::after {
-  content: '';
-  position: absolute;
-  width: 140%;
-  height: 60%;
-  left: -20%;
-  filter: blur(60px);
-  opacity: 0.5;
-  mix-blend-mode: screen;
-}
-.bg-aurora::before {
-  top: -10%;
-  background: linear-gradient(120deg, #14B8A6, #8B5CF6, transparent 70%);
-  animation: auroraFlow1 14s ease-in-out infinite alternate;
-}
-.bg-aurora::after {
-  bottom: -20%;
-  background: linear-gradient(120deg, transparent 20%, #F59E0B, #14B8A6);
-  animation: auroraFlow2 18s ease-in-out infinite alternate;
-}
-@keyframes auroraFlow1 {
-  0% { transform: translateX(-8%) rotate(-3deg); }
-  100% { transform: translateX(8%) rotate(3deg); }
-}
-@keyframes auroraFlow2 {
-  0% { transform: translateX(6%) rotate(2deg); }
-  100% { transform: translateX(-6%) rotate(-2deg); }
-}
-
 .content-layer {
   position: relative;
   z-index: 1;
