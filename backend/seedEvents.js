@@ -1,7 +1,8 @@
 const mongoose = require("mongoose");
 const EventStore = require("./models/EventStore");
 
-const MONGO_URI = process.env.MONGO_URI || "mongodb://127.0.0.1:27017/audit-trail";
+const MONGO_URI =
+  process.env.MONGO_URI || "mongodb://127.0.0.1:27017/audit-trail";
 
 const events = [
   {
@@ -16,10 +17,10 @@ const events = [
   },
   {
     aggregateId: "shipment-001",
-    eventType: "ShipmentDispatched",
+    eventType: "ShipmentShipped",
     payload: {
       shipmentId: "shipment-001",
-      status: "dispatched",
+      status: "shipped",
     },
     timestamp: new Date(),
     version: 2,
@@ -39,14 +40,13 @@ const events = [
 async function seedEvents() {
   try {
     await mongoose.connect(MONGO_URI);
-
     console.log("MongoDB connected");
 
     await EventStore.insertMany(events);
-
-    console.log("3 sample events inserted successfully");
+    console.log(`${events.length} sample events inserted successfully`);
   } catch (error) {
     console.error("Error seeding events:", error);
+    process.exitCode = 1;
   } finally {
     await mongoose.connection.close();
     console.log("MongoDB connection closed");
