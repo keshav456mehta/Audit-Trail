@@ -1,96 +1,79 @@
 # Audit Trail
 
-Event Sourcing backend for tracking shipment events.
+An **event-sourced, CQRS inventory & logistics ledger** (Axlero Advanced MERN, Project 2).
+Shipment changes are never overwritten: each one is an immutable, hash-chained event, and the current state is
+rebuilt by replaying them. A React dashboard lets you inspect a shipment, rewind it to any moment, see sensor data
+against its timeline, and prove the history was not tampered with.
 
-## API Contract
+## What it does
 
-### Base URL
+| Spec requirement | Where |
+| --- | --- |
+| CQRS: separate write and read routers | `POST /shipment/move` vs `GET /shipment/:id`; `backend/routes/` |
+| Append-only event store (aggregateId, eventType, payload, timestamp, version) | `backend/models/EventStore.js` |
+| Event-sourcing engine: validate, append, fold | `backend/domain/shipment.js`, `backend/services/eventAppender.js` |
+| Immutability (no UPDATE/DELETE) | Mongoose guards + DB role script + hash chain. See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) |
+| Projections / read model + background worker | `backend/projections/` |
+| Optimistic concurrency control | required `expectedVersion`, 409 on conflict |
+| Timeline UI, "rewind time" slider | `frontend/src/components/Timeline.jsx`, `TimeScrubber.jsx` |
+| Recharts sensor metrics over the event timeline | `frontend/src/components/TemperatureChart.jsx` |
+| Cryptographic proof of event sequence | SHA-256 hash chain, `/verify`, `npm run verify:chain` |
 
-`/api/shipments`
+Plus: JWT auth with roles, Docker, CI, and a test suite that runs against a real database.
 
-### GET /api/shipments/:id
+## Quick start
 
-Returns the current shipment state and complete event history.
+Requirements: Node 20+, MongoDB running locally (or a connection string).
 
-#### Example Request
+```bash
+# backend
+cd backend
+npm install
+cp .env.example .env        # defaults work for local development
+npm run seed                # demo users + 3 demo shipments
+npm run dev                 # http://localhost:5000
 
-GET /api/shipments/SHIP123
-
-#### Success Response
-
-```json
-{
-  "success": true,
-  "shipmentId": "SHIP123",
-  "currentState": {
-    "shipmentId": "SHIP123",
-    "status": "DELIVERED"
-  },
-  "eventHistory": [
-    {
-      "aggregateId": "SHIP123",
-      "eventType": "ShipmentCreated",
-      "timestamp": "2026-09-18T09:00:00Z"
-    },
-    {
-      "aggregateId": "SHIP123",
-      "eventType": "ShipmentPacked",
-      "timestamp": "2026-09-18T10:00:00Z"
-    },
-    {
-      "aggregateId": "SHIP123",
-      "eventType": "ShipmentShipped",
-      "timestamp": "2026-09-18T11:00:00Z"
-    },
-    {
-      "aggregateId": "SHIP123",
-      "eventType": "ShipmentDelivered",
-      "timestamp": "2026-09-18T12:00:00Z"
-    }
-  ]
-}
+# frontend (new terminal)
+cd frontend
+npm install
+cp .env.example .env
+npm run dev                 # http://localhost:5173
 ```
 
-#### Error Response
+Sign in with `operator` / `operator-pass-123` (development seed only; also `viewer` and `admin`, same pattern).
+Open **CONT-DEMO-001** to see a shipment with a temperature spike, drag the slider to rewind it, and run "Re-verify".
 
-```json
-{
-  "success": true,
-  "message": "Error fetching shipment"
-}
-```
-## Event Store Schema
+Or with Docker: see [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
 
-The Event Store stores shipment events used by the event-sourcing flow.
+## Scripts
 
-### Fields
+| Where | Command | What |
+| --- | --- | --- |
+| root | `npm test` | backend + frontend tests |
+| backend | `npm test` | domain unit tests + HTTP integration tests (needs MongoDB; `TEST_MONGO_URI` to override) |
+| backend | `npm run seed` | idempotent demo data |
+| backend | `npm run verify:chain` | verify every shipment's hash chain (exit 1 if tampered) |
+| frontend | `npm test`, `npm run lint`, `npm run build` | |
+| frontend | `E2E_API_URL=http://localhost:5000 npx vitest run src/test/live.e2e.test.js` | run the real client against a running backend |
 
-| Field | Description |
-|---|---|
-| ggregateId | Identifies the shipment/entity associated with the event. |
-| eventType | Identifies the type of event that occurred. |
-| payload | Stores the data associated with the event. |
-| 	imestamp | Records when the event occurred. |
-| ersion | Tracks the event version for the aggregate. |
+## Tests
 
-### Supported Event Types
+- **Backend:** pure domain tests, plus HTTP tests against a real database and a real server: validation, auth/roles,
+  state machine, **a 12-way write race**, idempotency, **12 ways of trying to modify the log**, tamper detection, time travel,
+  projections, rebuild, CORS and error hygiene.
+- **Frontend:** reducer, API client, components, and full user flows with mocked API, including a test that renders the whole
+  app (it would have caught the v1 blank-page crash).
+- **Live end-to-end:** the real frontend API client against the real backend.
 
-The Event Store supports the following shipment event types:
+See [CHANGELOG.md](CHANGELOG.md) for what changed from v1 and why. The original team notes are in [docs/worklog](docs/worklog).
 
-- ShipmentCreated
-- ShipmentPacked
-- ShipmentShipped
-- ShipmentDelivered
+## Documentation
 
-### Validation and Indexing
+[Architecture](docs/ARCHITECTURE.md) · [API](docs/API.md) · [Deployment](docs/DEPLOYMENT.md) · Postman: `backend/postman/`
 
-- Required fields are validated by the Event Store schema.
-- eventType is restricted to the supported event types.
-- An index is maintained on ggregateId for aggregate-based event queries.
-- An index is maintained on 	imestamp for timestamp-based event queries.
-- New events use the next version for the related aggregate.
-- Duplicate events are checked before a new event is stored.
+## Honest limitations
 
-### Query Compatibility
-
-Shipment events are retrieved using ggregateId and ordered by 	imestamp. The retrieved events are used by the shipment fold logic to calculate the current shipment state.
+- Event streams are replayed on every command. Fine for hundreds of events per shipment; add snapshots beyond thousands.
+- The hash chain proves tampering happened; it cannot stop someone with raw database access. Use the append-only DB role
+  and anchor the head hash off-system for real assurance (see Architecture).
+- The read model is eventually consistent (milliseconds); `GET /shipment/:id` is always exact.
