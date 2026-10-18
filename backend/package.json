@@ -1,15 +1,25 @@
 {
-  "name": "backend",
-  "version": "1.0.0",
+  "name": "audit-trail-backend",
+  "version": "2.0.0",
+  "private": true,
+  "description": "Event-sourced, CQRS shipment ledger API",
   "main": "server.js",
+  "engines": { "node": ">=20" },
   "scripts": {
     "start": "node server.js",
-    "test": "node --test"
+    "dev": "node --watch server.js",
+    "seed": "node scripts/seed.js",
+    "verify:chain": "node scripts/verifyChain.js",
+    "test": "node --test --test-concurrency=1 \"test/*.test.js\""
   },
   "dependencies": {
+    "bcryptjs": "^3.0.2",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
+    "express-rate-limit": "^8.0.0",
+    "helmet": "^8.1.0",
+    "jsonwebtoken": "^9.0.2",
     "mongoose": "^9.9.5"
   }
 }
