@@ -1,0 +1,77 @@
+export const THEMES = [
+  { id: 'light', label: 'Daylight', swatch: '#C2703D' },
+  { id: 'comet', label: 'Comet', swatch: '#8B5CF6' },
+  { id: 'radar', label: 'Radar', swatch: '#F59E0B' },
+]
+
+const LIGHT = {
+  light: true,
+  page: 'bg-[#FAF6EE] font-serif-warm',
+  text: 'text-[#3B3021]',
+  dim: 'text-[#8A7F6A]',
+  faint: 'text-[#B3A88F]',
+  card: 'bg-white border-[#E8DFC9]',
+  cardHover: 'hover:border-[#C2703D]/50',
+  dashed: 'border-[#DDD3BE] text-[#B3A88F]',
+  input:
+    'bg-white border border-[#E8DFC9] text-[#3B3021] placeholder-[#B3A88F] focus:border-[#C2703D] focus:ring-[#C2703D]',
+  btn: 'bg-[#C2703D] hover:bg-[#A85E30] disabled:bg-[#EDE6D3] disabled:text-[#B3A88F] text-white',
+  btnGhost: 'border border-[#E8DFC9] text-[#8A7F6A] hover:bg-[#F0E9D8] disabled:opacity-50',
+  danger: 'border border-[#E8B4A8] bg-[#FBEAE6] text-[#B54A3C]',
+  warn: 'border border-[#E8D3A8] bg-[#FBF3E0] text-[#8A6A1F]',
+  ok: 'text-[#4A7A5C]',
+  bad: 'text-[#B54A3C]',
+  rule: 'bg-[#E8DFC9]',
+  track: 'bg-[#EDE6D3]',
+  accent: '#C2703D',
+  fill: 'from-[#C2703D] to-[#4A7A5C]',
+  dotBorder: 'border-[#FAF6EE]',
+  stepOff: { bg: '#FAF6EE', border: '#DDD3BE', text: 'text-[#B3A88F]' },
+  chart: { line: '#6D8B74', grid: '#E8DFC9', axis: '#8A7F6A', spike: '#B54A3C', marker: '#C2703D' },
+  events: {
+    ShipmentCreated: '#C2703D',
+    ShipmentPacked: '#6D8B74',
+    ShipmentShipped: '#B08968',
+    ShipmentArrivedAtPort: '#5B7C99',
+    ShipmentDelivered: '#4A7A5C',
+    ShipmentTemperatureRecorded: '#8A7F6A',
+    ShipmentTemperatureSpike: '#B54A3C',
+  },
+}
+
+const DARK = {
+  light: false,
+  page: 'bg-black',
+  text: 'text-[#E5E7EB]',
+  dim: 'text-[#9CA3AF]',
+  faint: 'text-[#6B7280]',
+  card: 'bg-[#111827] border-[#1F2937]',
+  cardHover: 'hover:border-[#14B8A6]/50',
+  dashed: 'border-[#1F2937] text-[#6B7280]',
+  input:
+    'bg-[#111827] border border-[#1F2937] text-[#E5E7EB] placeholder-[#6B7280] focus:border-[#14B8A6] focus:ring-[#14B8A6]',
+  btn: 'bg-[#14B8A6] hover:bg-[#0d9488] disabled:bg-[#1F2937] disabled:text-[#6B7280] text-black',
+  btnGhost: 'border border-[#1F2937] text-[#9CA3AF] hover:bg-[#1F2937] disabled:opacity-50',
+  danger: 'border border-[#7F1D1D] bg-[#1F2937]/40 text-[#EF4444]',
+  warn: 'border border-[#78531A] bg-[#2A2110]/60 text-[#F59E0B]',
+  ok: 'text-[#10B981]',
+  bad: 'text-[#EF4444]',
+  rule: 'bg-[#1F2937]',
+  track: 'bg-[#1F2937]',
+  accent: '#14B8A6',
+  fill: 'from-[#14B8A6] to-[#F59E0B]',
+  dotBorder: 'border-black',
+  stepOff: { bg: '#111827', border: '#1F2937', text: 'text-[#4B5563]' },
+  chart: { line: '#14B8A6', grid: '#1F2937', axis: '#9CA3AF', spike: '#EF4444', marker: '#F59E0B' },
+  events: {
+    ShipmentCreated: '#14B8A6',
+    ShipmentPacked: '#3B82F6',
+    ShipmentShipped: '#F59E0B',
+    ShipmentArrivedAtPort: '#A78BFA',
+    ShipmentDelivered: '#10B981',
+    ShipmentTemperatureRecorded: '#9CA3AF',
+    ShipmentTemperatureSpike: '#EF4444',
+  },
+}
+
+export const getTheme = (id) => (id === 'light' ? LIGHT : DARK)
