@@ -1,14 +1,15 @@
 {
   "name": "audit-trail",
+  "version": "2.0.0",
   "private": true,
+  "description": "Event-sourced, CQRS shipment ledger: Express + MongoDB backend, React dashboard",
   "scripts": {
-    "dev": "cd frontend && npm run dev",
-    "build": "cd frontend && npm run build",
-    "lint": "cd frontend && npm run lint",
-    "preview": "cd frontend && npm run preview",
-    "start": "react-scripts start"
-  },
-  "devDependencies": {
-    "@tailwindcss/vite": "^4.3.3"
+    "install:all": "npm --prefix backend install && npm --prefix frontend install",
+    "dev:backend": "npm --prefix backend run dev",
+    "dev:frontend": "npm --prefix frontend run dev",
+    "seed": "npm --prefix backend run seed",
+    "test": "npm --prefix backend test && npm --prefix frontend test",
+    "lint": "npm --prefix frontend run lint",
+    "build": "npm --prefix frontend run build"
   }
 }
