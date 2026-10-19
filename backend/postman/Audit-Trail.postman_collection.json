@@ -1,0 +1,589 @@
+{
+  "info": {
+    "name": "Audit Trail API",
+    "description": "Run the folders top to bottom. Start the backend and run `npm run seed` first.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5000"
+    },
+    {
+      "key": "shipmentId",
+      "value": "POSTMAN-001"
+    },
+    {
+      "key": "version",
+      "value": "0"
+    },
+    {
+      "key": "token",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Auth",
+      "item": [
+        {
+          "name": "Login (operator)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "pm.collectionVariables.set('token', pm.response.json().token);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"operator\",\n  \"password\": \"operator-pass-123\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Who am I",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('operator', () => pm.expect(pm.response.json().user.role).to.eql('operator'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/auth/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "me"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Commands (write side)",
+      "item": [
+        {
+          "name": "Create shipment (expectedVersion 0)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 201', () => pm.response.to.have.status(201));",
+                  "if (pm.response.code === 201) pm.collectionVariables.set('version', pm.response.json().event.version);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/shipment/move",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "shipment",
+                "move"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"aggregateId\": \"{{shipmentId}}\",\n  \"eventType\": \"ShipmentCreated\",\n  \"payload\": {\n    \"origin\": \"Mumbai Port\",\n    \"destination\": \"Rotterdam\"\n  },\n  \"expectedVersion\": 0,\n  \"idempotencyKey\": \"{{$guid}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Pack",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 201', () => pm.response.to.have.status(201));",
+                  "if (pm.response.code === 201) pm.collectionVariables.set('version', pm.response.json().event.version);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/shipment/move",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "shipment",
+                "move"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"aggregateId\": \"{{shipmentId}}\",\n  \"eventType\": \"ShipmentPacked\",\n  \"payload\": {},\n  \"expectedVersion\": {{version}},\n  \"idempotencyKey\": \"{{$guid}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Ship",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 201', () => pm.response.to.have.status(201));",
+                  "if (pm.response.code === 201) pm.collectionVariables.set('version', pm.response.json().event.version);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/shipment/move",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "shipment",
+                "move"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"aggregateId\": \"{{shipmentId}}\",\n  \"eventType\": \"ShipmentShipped\",\n  \"payload\": {\n    \"vessel\": \"MSC Aurora\"\n  },\n  \"expectedVersion\": {{version}},\n  \"idempotencyKey\": \"{{$guid}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Record temperature",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 201', () => pm.response.to.have.status(201));",
+                  "if (pm.response.code === 201) pm.collectionVariables.set('version', pm.response.json().event.version);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/shipment/move",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "shipment",
+                "move"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"aggregateId\": \"{{shipmentId}}\",\n  \"eventType\": \"ShipmentTemperatureRecorded\",\n  \"payload\": {\n    \"temperature\": 4.2\n  },\n  \"expectedVersion\": {{version}},\n  \"idempotencyKey\": \"{{$guid}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Temperature spike",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 201', () => pm.response.to.have.status(201));",
+                  "if (pm.response.code === 201) pm.collectionVariables.set('version', pm.response.json().event.version);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/shipment/move",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "shipment",
+                "move"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"aggregateId\": \"{{shipmentId}}\",\n  \"eventType\": \"ShipmentTemperatureSpike\",\n  \"payload\": {\n    \"temperature\": 9.8,\n    \"threshold\": 8\n  },\n  \"expectedVersion\": {{version}},\n  \"idempotencyKey\": \"{{$guid}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "STALE write -> 409 (OCC)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 409', () => pm.response.to.have.status(409));",
+                  "pm.test('VERSION_CONFLICT', () => pm.expect(pm.response.json().error.code).to.eql('VERSION_CONFLICT'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/shipment/move",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "shipment",
+                "move"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"aggregateId\": \"{{shipmentId}}\",\n  \"eventType\": \"ShipmentTemperatureRecorded\",\n  \"payload\": {\n    \"temperature\": 5\n  },\n  \"expectedVersion\": 1,\n  \"idempotencyKey\": \"{{$guid}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "ILLEGAL transition -> 422",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 422', () => pm.response.to.have.status(422));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/shipment/move",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "shipment",
+                "move"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"aggregateId\": \"{{shipmentId}}\",\n  \"eventType\": \"ShipmentCreated\",\n  \"payload\": {\n    \"origin\": \"X\"\n  },\n  \"expectedVersion\": {{version}},\n  \"idempotencyKey\": \"{{$guid}}\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Queries (read side)",
+      "item": [
+        {
+          "name": "Get shipment (current)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/shipment/{{shipmentId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "shipment",
+                "{{shipmentId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Time travel: as of version 2",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('historical', () => pm.expect(pm.response.json().isHistorical).to.eql(true));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/shipment/{{shipmentId}}?version=2",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "shipment",
+                "{{shipmentId}}"
+              ],
+              "query": [
+                {
+                  "key": "version",
+                  "value": "2"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Temperature metrics",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/shipment/{{shipmentId}}/metrics",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "shipment",
+                "{{shipmentId}}",
+                "metrics"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Verify hash chain",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('chain intact', () => pm.expect(pm.response.json().valid).to.eql(true));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/shipment/{{shipmentId}}/verify",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "shipment",
+                "{{shipmentId}}",
+                "verify"
+              ]
+            }
+          }
+        },
+        {
+          "name": "List shipments (read model)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/shipment?limit=10&status=SHIPPED",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "shipment"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "status",
+                  "value": "SHIPPED"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Stats (aggregation)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/stats/shipments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "stats",
+                "shipments"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Unknown shipment -> 404",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('404', () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/shipment/does-not-exist",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "shipment",
+                "does-not-exist"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Admin",
+      "item": [
+        {
+          "name": "Rebuild read model (needs admin token)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/projections/rebuild",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "projections",
+                "rebuild"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

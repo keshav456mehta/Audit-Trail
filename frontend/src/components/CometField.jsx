@@ -6,6 +6,7 @@ function CometField() {
   useEffect(() => {
     const canvas = canvasRef.current
     const ctx = canvas.getContext('2d')
+    if (!ctx) return undefined // e.g. test environments without canvas support
     let width, height
     let animationId
 
@@ -17,10 +18,12 @@ function CometField() {
     window.addEventListener('resize', resize)
 
     const mouse = { x: width / 2, y: height / 2 }
-    window.addEventListener('mousemove', (e) => {
+    const onMouseMove = (e) => {
       mouse.x = e.clientX
       mouse.y = e.clientY
-    })
+    }
+    window.addEventListener('mousemove', onMouseMove)
+    const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
 
     const STREAK_COLORS = ['rgba(139,92,246,0.5)', 'rgba(20,184,166,0.45)', 'rgba(245,158,11,0.35)']
     const streaks = Array.from({ length: 5 }, (_, i) => ({
@@ -87,13 +90,14 @@ function CometField() {
         ctx.stroke()
       }
 
-      animationId = requestAnimationFrame(tick)
+      if (!reducedMotion) animationId = requestAnimationFrame(tick)
     }
     tick()
 
     return () => {
       cancelAnimationFrame(animationId)
       window.removeEventListener('resize', resize)
+      window.removeEventListener('mousemove', onMouseMove)
     }
   }, [])
 
