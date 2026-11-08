@@ -40,7 +40,7 @@ cp .env.example .env
 npm run dev                 # http://localhost:5173
 ```
 
-Sign in with `operator` / `operator123` (development seed only; also `viewer` and `admin`, same pattern).
+Sign in with `operator` / `operator-123` (development seed only; also `viewer` and `admin`, same pattern).
 Open **CONT-DEMO-001** to see a shipment with a temperature spike, drag the slider to rewind it, and run "Re-verify".
 
 Or with Docker: see [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
