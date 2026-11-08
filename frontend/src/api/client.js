@@ -60,7 +60,7 @@ export function toApiError(error) {
   return new ApiError({ code: 'NETWORK', message: 'Cannot reach the server. Is the backend running?' })
 }
 
-export const http = axios.create({ baseURL: API_URL, timeout: 10_000 })
+export const http = axios.create({ baseURL: API_URL, timeout: 60_000 })
 
 http.interceptors.request.use((config) => {
   const token = getToken()
